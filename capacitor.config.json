@@ -1,0 +1,13 @@
+{
+  "appId": "com.techpaathshala.officeimpostor",
+  "appName": "Office Impostor",
+  "webDir": "launcher",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true,
+    "allowNavigation": ["*"]
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

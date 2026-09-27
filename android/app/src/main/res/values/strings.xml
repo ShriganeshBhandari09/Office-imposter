@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Office Impostor</string>
+    <string name="title_activity_main">Office Impostor</string>
+    <string name="package_name">com.techpaathshala.officeimpostor</string>
+    <string name="custom_url_scheme">com.techpaathshala.officeimpostor</string>
+</resources>

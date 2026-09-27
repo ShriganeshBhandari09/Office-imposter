@@ -1,0 +1,31 @@
+{
+  "name": "office-impostor",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Among Us-style social deduction game on the office map. Runs on one laptop over office Wi-Fi.",
+  "scripts": {
+    "play": "vite build && node server/index.js",
+    "start": "node server/index.js",
+    "build": "vite build",
+    "dev:server": "node --watch server/index.js",
+    "dev:client": "vite",
+    "android:sync": "cap sync android",
+    "android:apk": "cap sync android && cd android && gradlew assembleDebug",
+    "android:open": "cap open android"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "socket.io": "^4.8.4"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@vitejs/plugin-react": "^6.1.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "socket.io-client": "^4.8.4",
+    "vite": "^8.3.1"
+  }
+}

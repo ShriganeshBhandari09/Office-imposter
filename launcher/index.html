@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Office Impostor</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body { background: repeating-linear-gradient(0deg, #11151d 0 32px, #0f131a 32px 64px); color: #e8eaf0;
+      font-family: monospace; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .card { background: #161b24; border: 4px solid #2c3444; padding: 22px; width: 100%; max-width: 460px; box-shadow: 8px 8px 0 #0a0c10; }
+    h1 { color: #ffd740; font-size: 24px; margin: 0 0 6px; letter-spacing: 1px; }
+    p { color: #8a93a6; margin: 6px 0 14px; font-size: 15px; line-height: 1.4; }
+    input { width: 100%; font: 20px monospace; padding: 10px 12px; background: #0b0e14; color: #e8eaf0; border: 3px solid #2c3444; outline: none; }
+    input:focus { border-color: #ffd740; }
+    button { width: 100%; margin-top: 12px; font: 20px monospace; color: #e8eaf0; padding: 12px; border: 3px solid #0a0c10;
+      background: #3d6b2f; box-shadow: inset -4px -4px 0 #264a1c, inset 4px 4px 0 #5a9147; }
+    button:disabled { opacity: 0.5; }
+    .err { color: #ff5252; min-height: 1.3em; margin: 10px 0 0; font-size: 15px; }
+  </style>
+</head>
+<body>
+  <form class="card" id="f">
+    <h1>OFFICE IMPOSTOR</h1>
+    <p>Enter the address shown on the host laptop's terminal (for example <b>192.168.1.23:3000</b>). Your phone must be on the same Wi-Fi.</p>
+    <input id="addr" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="192.168.1.23:3000" />
+    <button id="go" type="submit">Connect</button>
+    <div class="err" id="err"></div>
+  </form>
+  <script>
+    const addr = document.getElementById('addr');
+    const go = document.getElementById('go');
+    const err = document.getElementById('err');
+    try { addr.value = localStorage.getItem('oi_server') || ''; } catch (e) {}
+
+    // Accepts "192.168.1.23", "192.168.1.23:3000" or a full "http://..." URL.
+    function normalise(v) {
+      v = v.trim().replace(/\/+$/, '');
+      if (!v) return null;
+      if (!/^https?:\/\//i.test(v)) v = 'http://' + v;
+      try {
+        const u = new URL(v);
+        if (!u.port && u.protocol === 'http:') u.port = '3000';
+        return u.origin;
+      } catch (e) { return null; }
+    }
+
+    document.getElementById('f').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const url = normalise(addr.value);
+      if (!url) { err.textContent = 'That address doesn\'t look right.'; return; }
+      err.textContent = '';
+      go.disabled = true; go.textContent = 'Connecting…';
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 5000);
+        await fetch(url + '/', { mode: 'no-cors', signal: ctrl.signal });
+        clearTimeout(timer);
+        try { localStorage.setItem('oi_server', addr.value.trim()); } catch (e) {}
+        location.href = url + '/';
+      } catch (e2) {
+        err.textContent = 'Can\'t reach ' + url + '. Check the address, that the server is running, and that you\'re on the same Wi-Fi.';
+        go.disabled = false; go.textContent = 'Connect';
+      }
+    });
+  </script>
+</body>
+</html>

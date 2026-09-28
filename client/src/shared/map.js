@@ -1,7 +1,7 @@
 // Shared map + game config. Imported by both the server and the React client.
 // Coordinates are in world units (1 unit = 1 pixel at zoom 1). Origin is top-left.
 
-export const WORLD = { w: 1000, h: 840 };
+export const WORLD = { w: 1000, h: 1020 };
 export const WALL = 12;
 export const PLAYER_R = 14;
 export const SPEED = 190; // units per second
@@ -27,11 +27,11 @@ export const ROOMS = [
     doors: [{ side: 'bottom', at: 60, size: 60 }, { side: 'bottom', at: 220, size: 60 }] },
   { id: 'security', name: 'Security', x: 800, y: 400, w: 200, h: 100, floor: '#8c8c8c', lockable: true,
     doors: [{ side: 'bottom', at: 54, size: 48 }] },
-  { id: 'call1', name: 'Call 1', x: 900, y: 500, w: 100, h: 80, floor: '#a58f6b', lockable: false,
+  { id: 'call1', name: 'Call 1', x: 900, y: 520, w: 100, h: 80, floor: '#a58f6b', lockable: false,
     doors: [{ side: 'left', at: 40, size: 50 }] },
-  { id: 'call2', name: 'Call 2', x: 900, y: 580, w: 100, h: 80, floor: '#a58f6b', lockable: false,
+  { id: 'call2', name: 'Call 2', x: 900, y: 620, w: 100, h: 80, floor: '#a58f6b', lockable: false,
     doors: [{ side: 'left', at: 40, size: 50 }] },
-  { id: 'call3', name: 'Call 3', x: 900, y: 660, w: 100, h: 80, floor: '#a58f6b', lockable: false,
+  { id: 'call3', name: 'Call 3', x: 900, y: 720, w: 100, h: 80, floor: '#a58f6b', lockable: false,
     doors: [{ side: 'left', at: 40, size: 50 }] },
 ];
 
@@ -42,10 +42,10 @@ export const DESKS = [
   { id: 'desk1', name: 'Desk 1', x: 530, y: 130, w: 120, h: 60 },
   { id: 'desk2', name: 'Desk 2', x: 760, y: 130, w: 120, h: 60 },
   { id: 'desk3', name: 'Desk 3', x: 520, y: 630, w: 280, h: 35 },
-  { id: 'desk4', name: 'Desk 4', x: 520, y: 730, w: 280, h: 35 },
-  { id: 'desk5', name: 'Desk 5', x: 30, y: 635, w: 100, h: 55 },
-  { id: 'desk6', name: 'Desk 6', x: 170, y: 635, w: 100, h: 55 },
-  { id: 'desk7', name: 'Desk 7', x: 310, y: 635, w: 100, h: 55 },
+  { id: 'desk4', name: 'Desk 4', x: 520, y: 800, w: 280, h: 35 },
+  { id: 'desk5', name: 'Desk 5', x: 30, y: 680, w: 100, h: 55 },
+  { id: 'desk6', name: 'Desk 6', x: 170, y: 680, w: 100, h: 55 },
+  { id: 'desk7', name: 'Desk 7', x: 310, y: 680, w: 100, h: 55 },
 ];
 export const TABLES = [
   { id: 'table_tennis', x: 60, y: 40, w: 90, h: 50, color: '#2e7d32' },
@@ -69,15 +69,15 @@ export const TASKS = [
   { id: 'conf_projector', name: 'Align the projector', room: 'Conference', x: 760, y: 520, type: 'align' },
   { id: 'conf_board', name: 'Wipe the whiteboard', room: 'Conference', x: 680, y: 408, type: 'clicks', count: 7, thing: 'scribble' },
   { id: 'sec_id', name: 'Swipe ID card', room: 'Security', x: 880, y: 430, type: 'swipe' },
-  { id: 'call1_phone', name: 'Answer the phone', room: 'Call 1', x: 970, y: 510, type: 'keypad' },
-  { id: 'call2_headset', name: 'Reconnect headset', room: 'Call 2', x: 970, y: 645, type: 'wires', count: 3 },
-  { id: 'call3_type', name: 'Transcribe the call', room: 'Call 3', x: 970, y: 675, type: 'type' },
+  { id: 'call1_phone', name: 'Answer the phone', room: 'Call 1', x: 970, y: 530, type: 'keypad' },
+  { id: 'call2_headset', name: 'Reconnect headset', room: 'Call 2', x: 970, y: 685, type: 'wires', count: 3 },
+  { id: 'call3_type', name: 'Transcribe the call', room: 'Call 3', x: 970, y: 735, type: 'type' },
   { id: 'desk1_upload', name: 'Upload attendance', room: 'Desk 1', x: 590, y: 160, type: 'upload', seconds: 6 },
   { id: 'desk2_wires', name: 'Fix laptop wires', room: 'Desk 2', x: 820, y: 160, type: 'wires', count: 4 },
   { id: 'desk3_type', name: 'Type the code', room: 'Desk 3', x: 660, y: 647, type: 'type' },
-  { id: 'desk4_printer', name: 'Refill the printer', room: 'Desk 4', x: 660, y: 747, type: 'clicks', count: 5, thing: 'paper' },
-  { id: 'desk5_notes', name: 'Sort sticky notes', room: 'Desk 5', x: 80, y: 662, type: 'sequence', count: 8 },
-  { id: 'desk6_charge', name: 'Charge the laptop', room: 'Desk 6', x: 220, y: 662, type: 'hold', seconds: 4 },
+  { id: 'desk4_printer', name: 'Refill the printer', room: 'Desk 4', x: 660, y: 817, type: 'clicks', count: 5, thing: 'paper' },
+  { id: 'desk5_notes', name: 'Sort sticky notes', room: 'Desk 5', x: 80, y: 707, type: 'sequence', count: 8 },
+  { id: 'desk6_charge', name: 'Charge the laptop', room: 'Desk 6', x: 220, y: 707, type: 'hold', seconds: 4 },
 ];
 export const TASKS_PER_PLAYER = 3;
 
@@ -87,7 +87,7 @@ export const SABOTAGE_FIX = {
   comms: [{ id: 'comms', name: 'Fix network', x: 630, y: 298, type: 'align' }],
   wifi: [
     { id: 'wifiA', name: 'Reset Wi-Fi (Security)', x: 960, y: 418, type: 'holdSync' },
-    { id: 'wifiB', name: 'Reset Wi-Fi (Call 3)', x: 918, y: 670, type: 'holdSync' },
+    { id: 'wifiB', name: 'Reset Wi-Fi (Call 3)', x: 918, y: 730, type: 'holdSync' },
   ],
 };
 
@@ -98,7 +98,7 @@ export const VENTS = [
   { id: 'v_toilets', x: 80, y: 400, to: 'v_sec' },
   { id: 'v_sec', x: 980, y: 430, to: 'v_toilets' },
   { id: 'v_pixel', x: 200, y: 520, to: 'v_call2' },
-  { id: 'v_call2', x: 975, y: 595, to: 'v_pixel' },
+  { id: 'v_call2', x: 975, y: 635, to: 'v_pixel' },
   { id: 'v_hive', x: 390, y: 40, to: 'v_den' },
   { id: 'v_den', x: 400, y: 530, to: 'v_hive' },
 ];
@@ -108,7 +108,7 @@ export const CAMERAS = [
   { name: 'Cafeteria', x: 0, y: 0, w: 240, h: 240 },
   { name: 'Lobby', x: 400, y: 280, w: 600, h: 120 },
   { name: 'Conference', x: 520, y: 400, w: 280, h: 160 },
-  { name: 'Security wing', x: 800, y: 400, w: 200, h: 340 },
+  { name: 'Security wing', x: 800, y: 400, w: 200, h: 400 },
 ];
 
 export const COLORS = [

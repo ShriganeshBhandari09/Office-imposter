@@ -92,10 +92,10 @@ function buildStatic() {
   prop(800, 450, 60, 40, '#212121', '#1b5e20');     // Security camera console
   prop(860, 410, 40, 20, '#212121', '#424242');     // Security ID reader
   prop(940, 400, 40, 20, '#263238', '#29b6f6');     // Wi-Fi panel (Security)
-  prop(898, 655, 40, 20, '#263238', '#29b6f6');     // Wi-Fi panel (Call 3)
-  prop(950, 495, 30, 16, '#37474f', '#263238');     // Call 1 phone
-  prop(950, 630, 30, 14, '#37474f', '#263238');     // Call 2 headset stand
-  prop(950, 660, 30, 16, '#263238', '#455a64');     // Call 3 laptop
+  prop(898, 715, 40, 20, '#263238', '#29b6f6');     // Wi-Fi panel (Call 3)
+  prop(950, 515, 30, 16, '#37474f', '#263238');     // Call 1 phone
+  prop(950, 670, 30, 14, '#37474f', '#263238');     // Call 2 headset stand
+  prop(950, 720, 30, 16, '#263238', '#455a64');     // Call 3 laptop
   prop(130, 260, 40, 20, '#fbc02d', '#212121');     // Toilets power panel (lights fix)
 
   // Vents.
@@ -124,8 +124,8 @@ function buildStatic() {
   g.fillStyle = 'rgba(0,0,0,0.25)';
   g.font = '14px "Press Start 2P", monospace';
   g.fillText('Workspace', 720, 35);
-  g.fillText('Workspace', 660, 780);
-  g.fillText('Workspace', 220, 780);
+  g.fillText('Workspace', 660, 900);
+  g.fillText('Workspace', 220, 900);
   g.textAlign = 'left';
   return c;
 }

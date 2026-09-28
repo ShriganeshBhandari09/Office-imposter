@@ -300,6 +300,7 @@ export default function Game({ view, viewRef }) {
     <div className={`game ${IS_TOUCH ? 'touch' : ''}`}>
       <canvas ref={canvasRef} className="world" />
       {IS_TOUCH && !modal && <Joystick vecRef={joy} />}
+      <div className="rotate-hint"><div className="phone" /><p>Turn your phone sideways to play.</p></div>
       {sab?.type === 'wifi' && <div className="critical-tint" />}
 
       {/* Top-left: tasks */}

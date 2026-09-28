@@ -1,28 +1,46 @@
 # Office Impostor
 
 A social deduction game (Among Us–style) set on the Techpaathshala office map.
-It runs as a React web app on the office Wi-Fi: one laptop hosts it, and everyone else plays in their browser. There is nothing to install for the players.
+Play in the browser or the Android app, from anywhere. The host creates a game and shares a 4-letter room code; everyone else joins with it.
 
-## Run it (host laptop)
+## Play
 
-You need Node.js 22 (or 20.19+). Download it from nodejs.org if the laptop doesn't have it.
+1. Open the game (the Android app, or the server's link in any browser).
+2. Type your name and pick a colour.
+3. **Host:** tap **Create game**. The lobby shows a room code such as `AK4M`; tap **Invite** to share it.
+4. **Everyone else:** type the code and tap **Join**.
+5. When at least 3 players are in, the host taps **Start game**.
+
+You can change your name and colour in the lobby, and **Leave** takes you back to the start screen. If your connection drops or you refresh, you rejoin the same room automatically.
+
+The server can run many rooms at once. A room with nobody connected is removed after 10 minutes.
+
+## Put the server online (Render, free)
+
+Do this once so the game works anywhere without a laptop running.
+
+1. Sign in at **render.com** with your GitHub account.
+2. **New → Blueprint**, pick the `Office-imposter` repo, and click **Apply**. Render reads `render.yaml` and sets everything up.
+3. When the deploy finishes, Render shows the address, for example `https://office-impostor.onrender.com`. Open it to play.
+
+Every push to `main` redeploys automatically.
+
+**Free plan:** the server sleeps after about 15 minutes without players. The first person to open the game waits 30–60 seconds while it wakes up; after that it's instant. Render's paid plan removes the wait.
+
+If your address is different from `https://office-impostor.onrender.com`, change `ONLINE_URL` in `launcher/index.html` and rebuild the APK.
+
+## Run it on a laptop instead (office Wi-Fi)
+
+You need Node.js 22 (or 20.19+).
 
 ```bash
 npm install
 npm run play
 ```
 
-The terminal prints the link to share, for example:
+The terminal prints the link to share, for example `http://192.168.1.23:3000`. Everyone on the same Wi-Fi opens it. After the first run, `npm start` starts the server without rebuilding.
 
-```
-On office Wi-Fi:  http://192.168.1.23:3000
-```
-
-Everyone on the same Wi-Fi opens that link, types a name, picks a colour and joins the lobby. The first person to join is the host and presses **Start game**.
-
-After the first run, `npm start` starts the server without rebuilding.
-
-**Windows:** the first time, Windows Firewall asks whether Node.js can use the network. Allow it on **Private networks**, or the other laptops won't be able to connect.
+**Windows:** the first time, Windows Firewall asks whether Node.js can use the network. Allow it on **Private networks**, or other devices won't be able to connect.
 
 ## Controls
 
@@ -48,34 +66,26 @@ Touch controls turn on automatically on touch screens, in the Android app or in 
 
 ## Android app (APK)
 
-The app is a small launcher. It asks for the host laptop's address and then loads the game from the laptop's server. You don't need to rebuild the APK when the game changes, and phones and laptops play in the same game.
+The app opens the online server straight away (it shows a "waking up" message if the free server is asleep). For a laptop on the office Wi-Fi, tap **Playing on a local server instead?** and type the laptop's address; the app remembers it.
 
-Players can also skip the app and open the Wi-Fi link in Chrome on their phone.
+The app loads the game from the server, so game changes don't need a new APK. Players can also skip the app and open the link in Chrome.
 
-### Build the APK (once)
+### Build the APK
 
-1. Install **Android Studio** from developer.android.com/studio. It includes the Android SDK and Java. Open it once and let it finish downloading the SDK.
-2. Point the build at Android Studio's Java and SDK (PowerShell, adjust the paths if you installed elsewhere):
+1. Install Java 21 and the Android SDK. The easiest way is **Android Studio** (developer.android.com/studio); open it once so it downloads the SDK.
+2. Point the build at them (PowerShell, adjust the paths to your install):
    ```powershell
-   $env:JAVA_HOME = "C:Program FilesAndroidAndroid Studiojbr"
-   $env:ANDROID_HOME = "$env:LOCALAPPDATAAndroidSdk"
+   $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+   $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
    ```
 3. Build:
    ```bash
    npm install
    npm run android:apk
    ```
-4. The APK is at `android/app/build/outputs/apk/debug/app-debug.apk`. Copy it to the phones (WhatsApp, USB or Google Drive) and install it. Android asks you to allow installing from that source.
+4. The APK is at `android/app/build/outputs/apk/debug/app-debug.apk`. Send it to the phones (WhatsApp, USB or Google Drive) and install it. Android asks you to allow installing from that source.
 
-You can also run `npm run android:open` to build and run the app from Android Studio (**Build → Build APK(s)**, or ▶ with a phone connected over USB).
-
-### Play on a phone
-
-1. The host runs `npm run play` on the laptop as usual.
-2. Open **Office Impostor** on the phone and type the address from the laptop's terminal, for example `192.168.1.23:3000`. The app remembers it for next time.
-3. The phone must be on the same Wi-Fi, and the laptop's firewall must allow Node.js on private networks.
-
-The app runs full screen in landscape and keeps the screen on. To change the launcher screen, edit `launcher/index.html` and run `npm run android:sync` before building again.
+The app runs full screen in landscape and keeps the screen on. After editing `launcher/index.html`, run `npm run android:apk` again.
 
 ## How a game works
 
@@ -159,7 +169,7 @@ Both the server and the browser read this file, so a change there applies everyw
 launcher/       Android app start screen (asks for the server address)
 android/        Android project generated by Capacitor (capacitor.config.json)
 server/
-  index.js      Express + Socket.IO server, 20 updates/sec to each player
+  index.js      Express + Socket.IO server: rooms with codes, 20 updates/sec to each player
   game.js       All game rules (roles, kills, tasks, meetings, sabotages, win checks)
 client/src/
   shared/map.js Map layout and game config (used by server and client)

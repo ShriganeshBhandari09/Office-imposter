@@ -3,19 +3,28 @@ import { COLORS } from './shared/map.js';
 import { spriteURL } from './render.js';
 import { socket, emit, saveName, savedName } from './net.js';
 
-export function JoinForm({ view, pid, onJoined }) {
+// Start screen: pick a name and colour, then create a new room or join one with a code.
+export function Home({ pid, onJoined }) {
   const [name, setName] = useState(savedName());
   const [color, setColor] = useState(null);
+  const [code, setCode] = useState(() => new URLSearchParams(window.location.search).get('room')?.toUpperCase() || '');
   const [err, setErr] = useState('');
-  const taken = new Set(view?.roster.map((r) => r.color));
-  const inProgress = view && view.phase !== 'lobby';
+  const [busy, setBusy] = useState(false);
 
-  const join = async (e) => {
+  const go = async (event, data) => {
+    if (!name.trim()) { setErr('Enter your name first.'); return; }
+    setBusy(true);
+    const res = await emit(event, { pid, name: name.trim(), color, ...data });
+    setBusy(false);
+    if (res.error) { setErr(res.error); return; }
+    saveName(name.trim());
+    onJoined(res.code);
+  };
+  const create = () => go('createRoom');
+  const join = (e) => {
     e.preventDefault();
-    if (!name.trim()) { setErr('Enter a name first.'); return; }
-    const res = await emit('join', { pid, name: name.trim(), color });
-    if (res.error) setErr(res.error);
-    else { saveName(name.trim()); onJoined(name.trim()); }
+    if (!code.trim()) { setErr('Enter the room code from the host.'); return; }
+    go('join', { code: code.trim() });
   };
 
   return (
@@ -23,31 +32,34 @@ export function JoinForm({ view, pid, onJoined }) {
       <div className="card join">
         <h1 className="title">Office<br />Impostor</h1>
         <p className="muted">One of your colleagues is not who they seem.</p>
-        {inProgress ? (
-          <p className="warn">A game is in progress with {view.roster.length} players. You can join when it ends.</p>
-        ) : (
-          <form onSubmit={join}>
-            <label className="label" htmlFor="name">Your name</label>
-            <input id="name" className="input" maxLength={14} value={name} autoFocus
-              onChange={(e) => { setName(e.target.value); setErr(''); }} placeholder="e.g. Dev" />
-            <div className="label">Pick a colour</div>
-            <div className="swatches">
-              {COLORS.map((c) => (
-                <button type="button" key={c.id} disabled={taken.has(c.id)}
-                  className={`swatch ${color === c.id ? 'sel' : ''}`} style={{ background: c.hex }}
-                  aria-label={c.id} onClick={() => setColor(c.id)} />
-              ))}
-            </div>
-            {err && <p className="error">{err}</p>}
-            <button className="btn huge" type="submit">Join</button>
+        <label className="label" htmlFor="name">Your name</label>
+        <input id="name" className="input" maxLength={14} value={name}
+          onChange={(e) => { setName(e.target.value); setErr(''); }} placeholder="e.g. Dev" />
+        <div className="label">Pick a colour</div>
+        <div className="swatches">
+          {COLORS.map((c) => (
+            <button type="button" key={c.id}
+              className={`swatch ${color === c.id ? 'sel' : ''}`} style={{ background: c.hex }}
+              aria-label={c.id} onClick={() => setColor(c.id)} />
+          ))}
+        </div>
+        {err && <p className="error">{err}</p>}
+        <div className="home-actions">
+          <button className="btn huge" type="button" disabled={busy} onClick={create}>Create game</button>
+          <div className="or">or join a friend's game</div>
+          <form className="join-row" onSubmit={join}>
+            <input className="input code-input" maxLength={4} value={code} placeholder="CODE" autoCapitalize="characters"
+              autoComplete="off" spellCheck={false} aria-label="Room code"
+              onChange={(e) => { setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')); setErr(''); }} />
+            <button className="btn huge join-btn" type="submit" disabled={busy}>Join</button>
           </form>
-        )}
+        </div>
       </div>
     </div>
   );
 }
 
-export function Lobby({ view }) {
+export function Lobby({ view, onLeave }) {
   const me = view.me;
   const isHost = view.hostId === me.id;
   const [err, setErr] = useState('');
@@ -57,13 +69,44 @@ export function Lobby({ view }) {
   const set = (k, v) => socket.emit('settings', { ...s, [k]: v });
   const start = async () => { const r = await emit('start'); if (r.error) setErr(r.error); };
   const need = Math.max(0, s.minPlayers - view.roster.length);
+  const myName = view.roster.find((r) => r.id === me.id)?.name || '';
+  const [name, setName] = useState(myName);
+  const [nameMsg, setNameMsg] = useState('');
+  const [copied, setCopied] = useState(false);
+  const saveMyName = async (e) => {
+    e.preventDefault();
+    const res = await emit('setName', name);
+    if (res.error) setNameMsg(res.error);
+    else { saveName(res.name); setName(res.name); setNameMsg('Saved'); setTimeout(() => setNameMsg(''), 1500); }
+  };
+  // Phones get the native share sheet; elsewhere the invite is copied.
+  const invite = async () => {
+    const url = `${window.location.origin}/?room=${view.code}`;
+    const text = `Join my Office Impostor game! Room code: ${view.code}`;
+    try {
+      if (navigator.share) { await navigator.share({ title: 'Office Impostor', text, url }); return; }
+      await navigator.clipboard.writeText(`${text}
+${url}`);
+      setCopied(true); setTimeout(() => setCopied(false), 1500);
+    } catch { /* share cancelled */ }
+  };
 
   return (
     <div className="screen">
       <div className="card lobby">
         <div className="lobby-head">
           <h1 className="title small">Lobby</h1>
-          <div className="muted small">Others join at <b>{window.location.host}</b> on the office Wi-Fi</div>
+          <button className="btn tiny" onClick={onLeave}>Leave</button>
+        </div>
+        <div className="room-code">
+          <div>
+            <div className="muted small">Room code</div>
+            <div className="code-big">{view.code}</div>
+          </div>
+          <div className="room-code-side">
+            <button className="btn" onClick={invite}>{copied ? 'Copied!' : 'Invite'}</button>
+            <div className="muted small">Friends tap Join and enter this code.</div>
+          </div>
         </div>
         <div className="roster">
           {view.roster.map((r) => (
@@ -73,6 +116,16 @@ export function Lobby({ view }) {
             </div>
           ))}
         </div>
+
+        <form className="name-row" onSubmit={saveMyName}>
+          <label className="label" htmlFor="myname">Your name</label>
+          <div className="join-row">
+            <input id="myname" className="input" maxLength={14} value={name}
+              onChange={(e) => { setName(e.target.value); setNameMsg(''); }} />
+            <button className="btn" type="submit" disabled={!name.trim() || name.trim() === myName}>Save</button>
+          </div>
+          {nameMsg && <div className={nameMsg === 'Saved' ? 'ok-msg small' : 'error small'}>{nameMsg}</div>}
+        </form>
 
         <div className="label">Your colour</div>
         <div className="swatches">
@@ -94,7 +147,8 @@ export function Lobby({ view }) {
         </div>
 
         <div className="controls muted small">
-          Move: WASD / arrows · Use: E · Report: R · Kill: Q · Vent: V · Map: Tab
+          <span className="kbd-only">Move: WASD / arrows · Use: E · Report: R · Kill: Q · Vent: V · Map: Tab</span>
+          <span className="touch-only">Drag on the left half to move · tap the buttons to act</span>
         </div>
 
         {err && <p className="error">{err}</p>}

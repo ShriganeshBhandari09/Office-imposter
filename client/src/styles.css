@@ -24,8 +24,9 @@ h1, h2 { font-family: var(--pixel); font-weight: 400; line-height: 1.4; }
 .error { color: var(--danger); }
 
 /* Screens and cards */
-.screen { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 16px; overflow: auto;
+.screen { height: 100%; display: flex; padding: 16px; overflow-y: auto; -webkit-overflow-scrolling: touch;
   background: repeating-linear-gradient(0deg, #11151d 0 32px, #0f131a 32px 64px); }
+.screen > * { margin: auto; }
 .card { background: var(--panel-solid); border: 4px solid var(--line); padding: 28px; width: 100%; max-width: 560px;
   box-shadow: 0 0 0 4px #0a0c10, 8px 8px 0 4px #0a0c10; }
 .title { font-size: 30px; color: var(--accent); margin: 0 0 8px; text-shadow: 4px 4px 0 #6d4c00; }
@@ -289,4 +290,80 @@ h1, h2 { font-family: var(--pixel); font-weight: 400; line-height: 1.4; }
   .bar.big { margin: 8px 0; }
   .btn.huge { margin-top: 8px; padding: 8px; }
   .meeting-box { height: 96vh; }
+}
+
+/* ---------- Small screens ---------- */
+.rotate-hint { display: none; }
+@media (orientation: portrait) and (max-width: 700px) {
+  .game.touch .rotate-hint { display: flex; position: fixed; inset: 0; z-index: 60; background: #05060a; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; padding: 24px; gap: 14px; }
+  .rotate-hint .phone { width: 46px; height: 76px; border: 4px solid var(--accent); border-radius: 8px; animation: rotate-phone 2s ease-in-out infinite; }
+}
+@keyframes rotate-phone { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+
+@media (max-height: 520px), (max-width: 520px) {
+  .screen { padding: 8px; }
+  .card { padding: 16px; box-shadow: 0 0 0 3px #0a0c10; }
+  .title { font-size: 20px; }
+  .label { margin: 8px 0 4px; }
+  .input { font-size: 20px; padding: 6px 10px; }
+  .swatch { width: 30px; height: 30px; }
+  .roster { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; margin-top: 10px; }
+  .who { padding: 4px; font-size: 17px; }
+  .who img { width: 34px; }
+  .btn.huge { font-size: 22px; }
+
+  /* In-game HUD */
+  .tasks { width: 210px; font-size: 15px; }
+  .tasks .label { font-size: 14px; margin: 0 0 4px; }
+  .tasks ul { padding-left: 16px; }
+  .tasks .bar { height: 10px; }
+  .where { font-size: 16px; padding: 4px 8px; }
+  .joy-hint { width: 100px; height: 100px; left: 16px; bottom: 16px; font-size: 14px; }
+
+  /* Meeting: compact cards in a grid so everyone fits */
+  .meeting-box { width: 100vw; height: 100vh; grid-template-columns: 1fr 240px; border-width: 3px; }
+  .meeting-head { padding: 6px 12px; }
+  .meeting-head h2 { font-size: 13px; margin: 0 0 2px; }
+  .meeting-head p { margin: 0; font-size: 15px; }
+  .meeting-body { padding: 8px; }
+  .vote-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
+  .vote-card { padding: 3px 6px; font-size: 17px; gap: 6px; }
+  .vote-card img { width: 26px; }
+  .vote-actions { margin-top: 8px; }
+  .chat-log { padding: 8px; font-size: 16px; }
+  .chat-form { padding: 6px; }
+  .chat-form .input { font-size: 17px; }
+
+  /* Overlays */
+  .reveal h1, .over h1 { font-size: 26px; }
+  .reveal-sprite { width: 96px; }
+  .eject h1 { font-size: 18px; }
+  .modal-head h2 { font-size: 12px; }
+}
+@media (max-width: 520px) {
+  .meeting-box { grid-template-columns: 1fr; grid-template-rows: auto 1fr 200px; }
+}
+.touch-only { display: none; }
+@media (pointer: coarse) { .kbd-only { display: none; } .touch-only { display: inline; } }
+
+/* ---------- Rooms ---------- */
+.home-actions { margin-top: 6px; }
+.or { text-align: center; color: var(--muted); margin: 14px 0 6px; font-size: 17px; }
+.join-row { display: flex; gap: 8px; align-items: stretch; }
+.join-row .input { flex: 1; min-width: 0; }
+.join-row .btn { flex-shrink: 0; }
+.code-input { text-transform: uppercase; letter-spacing: 6px; text-align: center; font-family: var(--pixel); font-size: 20px; }
+.btn.huge.join-btn { width: auto; margin-top: 0; padding: 8px 22px; }
+.room-code { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  background: #0b0e14; border: 3px dashed var(--accent); padding: 10px 14px; margin-top: 10px; }
+.code-big { font-family: var(--pixel); font-size: 30px; color: var(--accent); letter-spacing: 6px; }
+.room-code-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; text-align: right; }
+.name-row { margin-top: 4px; }
+.ok-msg { color: var(--ok); margin-top: 4px; }
+@media (max-height: 520px), (max-width: 520px) {
+  .code-big { font-size: 22px; }
+  .room-code { padding: 6px 10px; }
+  .or { margin: 8px 0 4px; }
+  .code-input { font-size: 16px; }
 }

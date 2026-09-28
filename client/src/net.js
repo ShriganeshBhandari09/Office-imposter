@@ -29,3 +29,11 @@ export function saveName(name) {
 export function emit(event, data) {
   return new Promise((resolve) => socket.emit(event, data, (res) => resolve(res || {})));
 }
+
+// The room this device was last in, so a refresh or dropped connection rejoins it.
+export function savedRoom() {
+  try { return storage()?.getItem('oi_room') || ''; } catch { return ''; }
+}
+export function saveRoom(code) {
+  try { if (code) storage()?.setItem('oi_room', code); else storage()?.removeItem('oi_room'); } catch { /* ignore */ }
+}

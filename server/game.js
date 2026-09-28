@@ -52,7 +52,8 @@ export class Game {
     let p = this.players.get(pid);
     if (p) {
       p.connected = true;
-      p.name = this.phase === 'lobby' ? name : p.name;
+      const clash = [...this.players.values()].some((q) => q.id !== pid && q.name.toLowerCase() === name.toLowerCase());
+      if (this.phase === 'lobby' && !clash) p.name = name;
       return { ok: true };
     }
     if (this.phase !== 'lobby') return { error: 'A game is in progress. Wait for it to finish, then join.' };
@@ -92,6 +93,23 @@ export class Game {
       this.backToLobby();
     }
   }
+
+  // Players can rename themselves in the lobby.
+  setName(pid, name) {
+    const p = this.players.get(pid);
+    if (!p) return { error: 'You are not in this room.' };
+    if (this.phase !== 'lobby') return { error: 'You can only change your name in the lobby.' };
+    name = String(name || '').trim().slice(0, 14);
+    if (!name) return { error: 'Enter a name first.' };
+    if ([...this.players.values()].some((q) => q.id !== pid && q.name.toLowerCase() === name.toLowerCase())) {
+      return { error: 'That name is taken.' };
+    }
+    p.name = name;
+    return { ok: true, name };
+  }
+
+  // True when nobody is connected, so the room can be cleaned up.
+  isEmpty() { return ![...this.players.values()].some((p) => p.connected); }
 
   setColor(pid, color) {
     const p = this.players.get(pid);

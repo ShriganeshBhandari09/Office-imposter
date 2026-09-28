@@ -1,0 +1,13 @@
+# Render Blueprint: render.com → New → Blueprint → pick this repo.
+services:
+  - type: web
+    name: office-impostor
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"

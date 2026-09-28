@@ -243,7 +243,8 @@ export class Game {
     const v = this.players.get(targetId);
     if (!this.isPlaying(k) || !k.alive || k.role !== 'impostor' || k.inVent) return;
     if (!v || !v.alive || v.role === 'impostor' || v.inVent) return;
-    if (now() < k.killCdUntil || dist(k, v) > KILL_RANGE) return;
+    // Positions on the killer's screen lag the server a little, so allow some slack beyond the button's range.
+    if (now() < k.killCdUntil || dist(k, v) > KILL_RANGE * 1.4) return;
     const t = now();
     v.alive = false;
     this.bodies.push({ id: `b${t}${v.id}`, playerId: v.id, name: v.name, color: v.color, x: v.x, y: v.y });
@@ -259,7 +260,7 @@ export class Game {
     const p = this.players.get(pid);
     if (!this.isPlaying(p) || !p.alive || p.inVent) return;
     const body = this.bodies.find((b) => b.id === bodyId) || this.bodies.find((b) => dist(b, p) <= REPORT_RANGE);
-    if (!body || dist(body, p) > REPORT_RANGE) return;
+    if (!body || dist(body, p) > REPORT_RANGE * 1.4) return;
     this.startMeeting(p, 'body', body);
   }
 

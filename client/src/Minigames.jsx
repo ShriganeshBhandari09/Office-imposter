@@ -42,7 +42,7 @@ function Hold({ def, onDone, label = 'Hold' }) {
     <div className="mg-center">
       <div className="bar big"><div style={{ width: `${p * 100}%` }} /></div>
       <button
-        className="btn huge"
+        className="btn huge hold-btn"
         disabled={done}
         onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); holding.current = true; }}
         onPointerUp={() => (holding.current = false)}
@@ -145,6 +145,7 @@ function TypeCode({ onDone }) {
         <span key={i} className={i < text.length ? (text[i] === ch ? 'ok' : 'bad') : ''}>{ch}</span>
       ))}</div>
       <input ref={ref} className="input" value={text} disabled={done} spellCheck={false}
+        autoCapitalize="off" autoCorrect="off" autoComplete="off"
         onChange={(e) => { const v = e.target.value; setText(v); if (v === target) finish(); }} />
       {done && <div className="mg-done inline">Done!</div>}
     </div>
@@ -222,33 +223,41 @@ function Swipe({ onDone }) {
   const [x, setX] = useState(0);
   const [msg, setMsg] = useState('Drag the card across the reader at a steady speed.');
   const [done, finish] = useFinish(onDone);
-  const start = useRef(null);
+  // The drag lives on the card itself (pointer capture), so it keeps working when the finger
+  // leaves the card, and touch-action: none in CSS stops the phone from scrolling instead.
+  const drag = useRef(null);
   const track = useRef();
-  const onDown = (e) => { e.preventDefault(); start.current = { t: performance.now(), x0: e.clientX }; };
-  useEffect(() => {
-    const move = (e) => {
-      if (!start.current || done) return;
-      const w = track.current.clientWidth - 90;
-      setX(Math.max(0, Math.min(1, (e.clientX - start.current.x0) / w)));
-    };
-    const up = () => {
-      if (!start.current) return;
-      const secs = (performance.now() - start.current.t) / 1000;
-      start.current = null;
-      if (x < 0.97) setMsg('Swipe all the way across.');
-      else if (secs < 0.5) setMsg('Too fast. Try again.');
-      else if (secs > 1.8) setMsg('Too slow. Try again.');
-      else { setMsg('Accepted. Thank you.'); finish(); return; }
-      setX(0);
-    };
-    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
-    return () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); };
-  });
+  const onDown = (e) => {
+    if (done || drag.current) return;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    drag.current = { id: e.pointerId, t: performance.now(), x0: e.clientX, x: 0 };
+  };
+  const onMove = (e) => {
+    const d = drag.current;
+    if (!d || e.pointerId !== d.id) return;
+    const w = track.current.clientWidth - 90;
+    d.x = Math.max(0, Math.min(1, (e.clientX - d.x0) / w));
+    setX(d.x);
+  };
+  const onUp = (e) => {
+    const d = drag.current;
+    if (!d || e.pointerId !== d.id) return;
+    drag.current = null;
+    const secs = (performance.now() - d.t) / 1000;
+    if (e.type === 'pointercancel') setMsg('Keep your finger on the card. Try again.');
+    else if (d.x < 0.95) setMsg('Swipe all the way across.');
+    else if (secs < 0.4) setMsg('Too fast. Try again.');
+    else if (secs > 2.2) setMsg('Too slow. Try again.');
+    else { setMsg('Accepted. Thank you.'); finish(); return; }
+    setX(0);
+  };
   return (
     <div className="mg-center">
       <p className="mg-note">{msg}</p>
       <div className="swipe" ref={track}>
-        <div className="card" style={{ left: `calc(${x} * (100% - 90px))` }} onPointerDown={onDown}>ID</div>
+        <div className="card" style={{ left: `calc(${x} * (100% - 90px))` }}
+          onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>ID</div>
       </div>
     </div>
   );
@@ -281,7 +290,7 @@ function HoldSync({ def, holds, onHold }) {
   return (
     <div className="mg-center">
       <p className="mg-note">Hold the reset button. Someone must hold the other panel ({other === 'wifiA' ? 'Security' : 'Call 3'}) at the same time.</p>
-      <button className={`btn huge danger ${holding ? 'pressed' : ''}`}
+      <button className={`btn huge danger hold-btn ${holding ? 'pressed' : ''}`}
         onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); set(true); }}
         onPointerUp={() => set(false)} onPointerCancel={() => set(false)} onContextMenu={(e) => e.preventDefault()}>
         {holding ? 'Holding…' : 'Hold to reset'}

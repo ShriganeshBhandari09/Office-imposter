@@ -71,7 +71,7 @@ function MiniCanvas({ viewRef, localRef, mode, markersRef }) {
       const c = ref.current;
       if (c && viewRef.current) {
         const w = c.clientWidth, h = c.clientHeight, dpr = window.devicePixelRatio || 1;
-        if (c.width !== w * dpr) { c.width = w * dpr; c.height = h * dpr; }
+        if (c.width !== Math.round(w * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
         const g = c.getContext('2d');
         drawMiniMap(g, w, h, { view: viewRef.current, me: localRef.current, markers: markersRef.current, camerasOnly: mode === 'cams', t, dpr });
       }
@@ -120,14 +120,22 @@ export default function Game({ view, viewRef }) {
     else if (u.kind === 'cams') openModal({ kind: 'cams' });
     else if (u.kind === 'emergency') emit('emergency').then((r) => r.error && flash(r.error));
   };
-  const doKill = () => { const k = actRef.current.kill; if (k && !actRef.current.killCd) socket.emit('kill', k); };
-  const doReport = () => { const b = actRef.current.body; if (b) socket.emit('report', b); };
+  // Send where we are right now first, so the server checks range against our real position.
+  const syncPos = () => { const L = local.current; socket.emit('move', { x: L.x, y: L.y, facing: L.facing, moving: L.moving }); };
+  const doKill = () => { const k = actRef.current.kill; if (k && !actRef.current.killCd) { syncPos(); socket.emit('kill', k); } };
+  const doReport = () => { const b = actRef.current.body; if (b) { syncPos(); socket.emit('report', b); } };
   const doVent = () => {
     const v = actRef.current.vent;
     if (v === 'in') socket.emit('vent', 'exit');
     else if (v === 'near') socket.emit('vent', 'enter');
   };
   const doVentMove = () => { if (actRef.current.vent === 'in') socket.emit('vent', 'move'); };
+  // Action buttons fire on touch-down: on phones a tap made while the other thumb is on the
+  // joystick often never turns into a click. Keyboard activation (click with detail 0) still works.
+  const tap = (fn) => ({
+    onPointerDown: (e) => { if (e.button === 0) { e.preventDefault(); fn(); } },
+    onClick: (e) => { if (e.detail === 0) fn(); },
+  });
   const sabotage = (type, room) => emit('sabotage', { type, room }).then((r) => r.error && flash(r.error));
 
   // ---------- Keyboard ----------
@@ -168,8 +176,10 @@ export default function Game({ view, viewRef }) {
       const v = viewRef.current;
       const dpr = window.devicePixelRatio || 1;
       const cw = window.innerWidth, ch = window.innerHeight;
-      if (canvas.width !== cw * dpr || canvas.height !== ch * dpr) {
-        canvas.width = cw * dpr; canvas.height = ch * dpr;
+      // Phones often have a fractional pixel ratio; round so the canvas isn't reallocated every frame.
+      const pw = Math.round(cw * dpr), ph = Math.round(ch * dpr);
+      if (canvas.width !== pw || canvas.height !== ph) {
+        canvas.width = pw; canvas.height = ph;
         canvas.style.width = cw + 'px'; canvas.style.height = ch + 'px';
       }
       if (v?.me) {
@@ -280,7 +290,19 @@ export default function Game({ view, viewRef }) {
           const pct = ((isImp ? v.settings?.impostorVision : v.settings?.crewVision) ?? 100) / 100;
           vision = isImp ? VISION.impostor * pct : (v.sabotage?.type === 'lights' ? VISION.lightsOut : VISION.crew) * pct;
         }
-        const zoom = Math.max(0.8, Math.min(1.8, ch / 640));
+        // Frame the camera on the vision circle, so it fills the screen whatever the vision setting
+        // (and zooms in when the lights go out). Ghosts and non-playing phases use a fixed zoom.
+        // Both ease towards their target so a sabotage shrinks the view smoothly instead of jumping.
+        const ease = Math.min(1, dt * 4);
+        if (vision) {
+          L.vision = L.vision ? L.vision + (vision - L.vision) * ease : vision;
+          vision = L.vision;
+        } else L.vision = 0;
+        const targetZoom = vision
+          ? Math.max(0.5, Math.min(3, Math.min(cw, ch) / (2 * vision * 1.08)))
+          : Math.max(0.8, Math.min(1.8, ch / 640));
+        L.zoom = L.zoom ? L.zoom + (targetZoom - L.zoom) * ease : targetZoom;
+        const zoom = L.zoom;
         drawWorld(g, cw, ch, { view: v, me: L, others: others.current, zoom, t, markers, killTargetId: a.kill, vision, dpr });
       }
       raf = requestAnimationFrame(loop);
@@ -375,19 +397,19 @@ export default function Game({ view, viewRef }) {
 
       {/* Action buttons */}
       <div className="actions">
-        <button className="act" disabled={!act.use} onClick={doUse}>
+        <button className="act" disabled={!act.use} {...tap(doUse)}>
           <span className="key">E</span>{act.use?.label || 'Use'}
         </button>
-        {alive && <button className="act report" disabled={!act.body} onClick={doReport}><span className="key">R</span>Report</button>}
+        {alive && <button className="act report" disabled={!act.body} {...tap(doReport)}><span className="key">R</span>Report</button>}
         {isImp && alive && (
           <>
-            <button className="act kill" disabled={!act.kill || act.killCd > 0} onClick={doKill}>
+            <button className="act kill" disabled={!act.kill || act.killCd > 0} {...tap(doKill)}>
               <span className="key">Q</span>{act.killCd > 0 ? `Kill ${act.killCd}s` : 'Kill'}
             </button>
             {act.vent === 'in' && (
-              <button className="act" onClick={doVentMove}><span className="key">Space</span>Next vent</button>
+              <button className="act" {...tap(doVentMove)}><span className="key">Space</span>Next vent</button>
             )}
-            <button className="act" disabled={!act.vent} onClick={doVent}>
+            <button className="act" disabled={!act.vent} {...tap(doVent)}>
               <span className="key">V</span>{act.vent === 'in' ? 'Exit vent' : 'Vent'}
             </button>
           </>

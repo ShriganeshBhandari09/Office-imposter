@@ -230,11 +230,28 @@ function castRay(x, y, dx, dy, segs, max) {
   return { d: best, hit };
 }
 
-// Polygon (world coords) of everything visible from (x,y) within radius r,
-// plus the occluders whose faces are in view (so walls can be drawn lit).
+// The outer edge of the map blocks light too, otherwise vision spills into the void past the walls.
+const BOUNDS = [
+  { x: -1000, y: -1000, w: WORLD.w + 2000, h: 1000, edge: true },
+  { x: -1000, y: WORLD.h, w: WORLD.w + 2000, h: 1000, edge: true },
+  { x: -1000, y: 0, w: 1000, h: WORLD.h, edge: true },
+  { x: WORLD.w, y: 0, w: 1000, h: WORLD.h, edge: true },
+];
+// How far light reaches into a wall it hits, so the wall's face reads as lit.
+const WALL_DEPTH = 16;
+
+// Distance along the ray from (x,y) at which it leaves rect o.
+function exitDist(x, y, dx, dy, o) {
+  const tx = dx > 0 ? (o.x + o.w - x) / dx : dx < 0 ? (o.x - x) / dx : Infinity;
+  const ty = dy > 0 ? (o.y + o.h - y) / dy : dy < 0 ? (o.y - y) / dy : Infinity;
+  return Math.min(tx, ty);
+}
+
+// Polygon (world coords) of everything visible from (x,y) within radius r.
+// Each ray stops a little way into the wall it hits, so only the part of a wall in view is lit.
 function visibilityPolygon(x, y, r, occluders) {
   const segs = [];
-  for (const o of occluders) if (nearRect(o, x, y, r)) segs.push(...rectSegments(o));
+  for (const o of [...occluders, ...BOUNDS]) if (nearRect(o, x, y, r)) segs.push(...rectSegments(o));
   // All angles in the same range as atan2 (-PI..PI) so sorting gives a clean, non-crossing outline.
   const angles = [];
   for (let i = 0; i < 128; i++) angles.push(-Math.PI + (i / 128) * Math.PI * 2);
@@ -245,14 +262,13 @@ function visibilityPolygon(x, y, r, occluders) {
   }
   angles.sort((a, b) => a - b);
   const pts = [];
-  const seen = new Set();
   for (const a of angles) {
     const dx = Math.cos(a), dy = Math.sin(a);
-    const { d, hit } = castRay(x, y, dx, dy, segs, r);
-    if (hit) seen.add(hit);
+    let { d, hit } = castRay(x, y, dx, dy, segs, r);
+    if (hit && !hit.edge) d = Math.min(r, d + WALL_DEPTH, exitDist(x, y, dx, dy, hit));
     pts.push([x + dx * d, y + dy * d]);
   }
-  return { pts, seen };
+  return pts;
 }
 
 // True if the straight line from a to b doesn't pass through any occluder (Liang-Barsky).
@@ -304,7 +320,9 @@ export function drawWorld(g, cw, ch, opts) {
   }
 
   // With limited vision, only what the local player can actually see is drawn.
-  const occluders = [...WALLS, ...DOORS.filter((d) => locked.has(d.roomId))];
+  // A door that locks on top of the player doesn't blind them.
+  const occluders = [...WALLS, ...DOORS.filter((d) => locked.has(d.roomId)
+    && !(me.x > d.x && me.x < d.x + d.w && me.y > d.y && me.y < d.y + d.h))];
   const canSee = (x, y) => !vision
     || (Math.hypot(x - me.x, y - me.y) <= vision && lineOfSight(me.x, me.y, x, y, occluders));
 
@@ -358,19 +376,17 @@ export function drawWorld(g, cw, ch, opts) {
     f.fillStyle = 'rgb(5,6,10)';
     f.fillRect(0, 0, W, H);
 
-    const { pts, seen } = visibilityPolygon(me.x, me.y, vision, occluders);
+    const pts = visibilityPolygon(me.x, me.y, vision, occluders);
     f.setTransform(zoom * dpr, 0, 0, zoom * dpr, -camX * zoom * dpr, -camY * zoom * dpr);
     const light = f.createRadialGradient(me.x, me.y, vision * 0.7, me.x, me.y, vision);
     light.addColorStop(0, 'rgba(0,0,0,1)');
     light.addColorStop(1, 'rgba(0,0,0,0)');
     f.globalCompositeOperation = 'destination-out';
     f.fillStyle = light;
-    // Visible floor plus the walls facing us, in one path so overlaps don't double-cut.
     f.beginPath();
     pts.forEach(([x, y], i) => (i === 0 ? f.moveTo(x, y) : f.lineTo(x, y)));
     f.closePath();
-    for (const o of seen) { f.moveTo(o.x, o.y); f.rect(o.x, o.y, o.w, o.h); }
-    f.fill('nonzero');
+    f.fill();
     f.globalCompositeOperation = 'source-over';
 
     g.drawImage(fogLayer, 0, 0, cw, ch);

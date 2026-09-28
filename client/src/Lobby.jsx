@@ -75,6 +75,7 @@ export function Lobby({ view, onLeave }) {
   const [name, setName] = useState(myName);
   const [nameMsg, setNameMsg] = useState('');
   const [copied, setCopied] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const saveMyName = async (e) => {
     e.preventDefault();
     const res = await emit('setName', name);
@@ -94,72 +95,94 @@ ${url}`);
   };
 
   return (
-    <div className="screen">
+    <div className="screen lobby-screen">
       <div className="card lobby">
         <div className="lobby-head">
           <h1 className="title small">Lobby</h1>
+          <div className="room-code">
+            <span className="muted small">Room code</span>
+            <span className="code-big">{view.code}</span>
+            <button className="btn" onClick={invite}>{copied ? 'Copied!' : 'Invite'}</button>
+          </div>
           <button className="btn tiny" onClick={onLeave}>Leave</button>
         </div>
-        <div className="room-code">
-          <div>
-            <div className="muted small">Room code</div>
-            <div className="code-big">{view.code}</div>
-          </div>
-          <div className="room-code-side">
-            <button className="btn" onClick={invite}>{copied ? 'Copied!' : 'Invite'}</button>
-            <div className="muted small">Friends tap Join and enter this code.</div>
-          </div>
-        </div>
-        <div className="roster">
-          {view.roster.map((r) => (
-            <div key={r.id} className={`who ${r.id === me.id ? 'me' : ''}`}>
-              <img alt="" src={spriteURL(colorHex(r.color))} />
-              <div>{r.name}{r.id === view.hostId && <span className="tag">host</span>}</div>
+
+        <div className="lobby-cols">
+          <div className="lobby-left">
+            <div className="label">Players ({view.roster.length}/{COLORS.length})</div>
+            <div className="roster">
+              {view.roster.map((r) => (
+                <div key={r.id} className={`who ${r.id === me.id ? 'me' : ''}`}>
+                  <img alt="" src={spriteURL(colorHex(r.color))} />
+                  <span className="who-name">{r.name}</span>
+                  {r.id === view.hostId && <span className="tag">host</span>}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-
-        <form className="name-row" onSubmit={saveMyName}>
-          <label className="label" htmlFor="myname">Your name</label>
-          <div className="join-row">
-            <input id="myname" className="input" maxLength={14} value={name}
-              onChange={(e) => { setName(e.target.value); setNameMsg(''); }} />
-            <button className="btn" type="submit" disabled={!name.trim() || name.trim() === myName}>Save</button>
+            <p className="muted small lobby-hint">Friends tap Join and enter <b>{view.code}</b>.</p>
           </div>
-          {nameMsg && <div className={nameMsg === 'Saved' ? 'ok-msg small' : 'error small'}>{nameMsg}</div>}
-        </form>
 
-        <div className="label">Your colour</div>
-        <div className="swatches">
-          {COLORS.map((c) => (
-            <button key={c.id} disabled={taken.has(c.id) && taken.get(c.id) !== me.id}
-              className={`swatch ${taken.get(c.id) === me.id ? 'sel' : ''}`} style={{ background: c.hex }}
-              aria-label={c.id} onClick={() => socket.emit('setColor', c.id)} />
-          ))}
+          <div className="lobby-right">
+            <form className="name-row" onSubmit={saveMyName}>
+              <label className="label" htmlFor="myname">Your name</label>
+              <div className="join-row">
+                <input id="myname" className="input" maxLength={14} value={name}
+                  onChange={(e) => { setName(e.target.value); setNameMsg(''); }} />
+                <button className="btn" type="submit" disabled={!name.trim() || name.trim() === myName}>Save</button>
+              </div>
+              {nameMsg && <div className={nameMsg === 'Saved' ? 'ok-msg small' : 'error small'}>{nameMsg}</div>}
+            </form>
+
+            <div className="label">Your colour</div>
+            <div className="swatches">
+              {COLORS.map((c) => (
+                <button key={c.id} disabled={taken.has(c.id) && taken.get(c.id) !== me.id}
+                  className={`swatch ${taken.get(c.id) === me.id ? 'sel' : ''}`} style={{ background: c.hex }}
+                  aria-label={c.id} onClick={() => socket.emit('setColor', c.id)} />
+              ))}
+            </div>
+
+            <button className="settings-summary" onClick={() => setShowSettings(true)}>
+              <span className="muted small">{isHost ? 'Game settings (tap to change)' : 'Game settings (host decides)'}</span>
+              <span className="small">
+                {s.impostors} impostor{s.impostors > 1 ? 's' : ''} · kill {s.killCooldown}s · meeting {s.meetingSeconds}s
+              </span>
+            </button>
+
+            {err && <p className="error small">{err}</p>}
+            {isHost ? (
+              <button className="btn huge" onClick={start} disabled={need > 0}>
+                {need > 0 ? `Waiting for ${need} more player${need > 1 ? 's' : ''}` : `Start game (${view.roster.length} players)`}
+              </button>
+            ) : <p className="muted center waiting">Waiting for the host to start…</p>}
+            <div className="controls muted small">
+              <span className="kbd-only">Move: WASD / arrows · Use: E · Report: R · Kill: Q · Vent: V · Map: Tab</span>
+              <span className="touch-only">Drag on the left half to move · tap the buttons to act</span>
+            </div>
+          </div>
         </div>
-
-        <div className="settings">
-          <div className="label">Game settings {isHost ? '' : '(host decides)'}</div>
-          <Setting label="Impostors" value={s.impostors} min={1} max={3} disabled={!isHost} onChange={(v) => set('impostors', v)} />
-          <Setting label="Kill cooldown (s)" value={s.killCooldown} min={10} max={60} step={5} disabled={!isHost} onChange={(v) => set('killCooldown', v)} />
-          <Setting label="Meeting time (s)" value={s.meetingSeconds} min={30} max={180} step={15} disabled={!isHost} onChange={(v) => set('meetingSeconds', v)} />
-          <Setting label="Emergency meetings each" value={s.emergencyPerPlayer} min={0} max={3} disabled={!isHost} onChange={(v) => set('emergencyPerPlayer', v)} />
-          <Setting label="Crew vision (%)" value={s.crewVision} min={25} max={300} step={5} disabled={!isHost} onChange={(v) => set('crewVision', v)} />
-          <Setting label="Impostor vision (%)" value={s.impostorVision} min={25} max={300} step={5} disabled={!isHost} onChange={(v) => set('impostorVision', v)} />
-        </div>
-
-        <div className="controls muted small">
-          <span className="kbd-only">Move: WASD / arrows · Use: E · Report: R · Kill: Q · Vent: V · Map: Tab</span>
-          <span className="touch-only">Drag on the left half to move · tap the buttons to act</span>
-        </div>
-
-        {err && <p className="error">{err}</p>}
-        {isHost ? (
-          <button className="btn huge" onClick={start} disabled={need > 0}>
-            {need > 0 ? `Waiting for ${need} more player${need > 1 ? 's' : ''}` : `Start game (${view.roster.length} players)`}
-          </button>
-        ) : <p className="muted center">Waiting for the host to start…</p>}
       </div>
+
+      {showSettings && (
+        <div className="modal-back" onPointerDown={(e) => e.target === e.currentTarget && setShowSettings(false)}>
+          <div className="modal settings-modal">
+            <div className="modal-head">
+              <h2>Game settings</h2>
+              <button className="x" onClick={() => setShowSettings(false)} aria-label="Close">✕</button>
+            </div>
+            {!isHost && <p className="muted small">Only the host can change these.</p>}
+            <div className="settings">
+              <Setting label="Impostors" value={s.impostors} min={1} max={3} disabled={!isHost} onChange={(v) => set('impostors', v)} />
+              <Setting label="Kill cooldown (s)" value={s.killCooldown} min={10} max={60} step={5} disabled={!isHost} onChange={(v) => set('killCooldown', v)} />
+              <Setting label="Meeting time (s)" value={s.meetingSeconds} min={30} max={180} step={15} disabled={!isHost} onChange={(v) => set('meetingSeconds', v)} />
+              <Setting label="Emergency meetings each" value={s.emergencyPerPlayer} min={0} max={3} disabled={!isHost} onChange={(v) => set('emergencyPerPlayer', v)} />
+              <Setting label="Crew vision (%)" value={s.crewVision} min={25} max={300} step={5} disabled={!isHost} onChange={(v) => set('crewVision', v)} />
+              <Setting label="Impostor vision (%)" value={s.impostorVision} min={25} max={300} step={5} disabled={!isHost} onChange={(v) => set('impostorVision', v)} />
+            </div>
+            <button className="btn huge" onClick={() => setShowSettings(false)}>Done</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

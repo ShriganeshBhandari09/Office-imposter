@@ -1,86 +1,134 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { COLORS } from './shared/map.js';
 import { spriteURL } from './render.js';
 import { socket, emit, saveName, savedName } from './net.js';
 
-// Start screen: pick a name and colour, then create a new room or join one with a code.
+const colorHex = (id) => COLORS.find((c) => c.id === id)?.hex;
+
+// Up to 6 players stand in one row, more in two rows; the CSS sizes them to fill the space.
+function lineupSize(n) {
+  const rows = n > 6 ? 2 : 1;
+  return { '--rows': rows, '--per': Math.max(4, Math.ceil(n / rows)) };
+}
+
+// Phones: go full screen and lock to landscape on the first tap (browsers only allow it after a tap).
+// The Android app is already full screen, so failures are ignored.
+function useFullscreenOnTap() {
+  useEffect(() => {
+    if (!window.matchMedia?.('(pointer: coarse)').matches) return;
+    const go = async () => {
+      try {
+        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+        }
+        await screen.orientation?.lock?.('landscape');
+      } catch { /* not supported here */ }
+    };
+    window.addEventListener('pointerup', go, { once: true });
+    return () => window.removeEventListener('pointerup', go);
+  }, []);
+}
+
+// Starry space background with a few crewmates drifting past.
+function Space({ drifters = true }) {
+  return (
+    <div className="space" aria-hidden="true">
+      <div className="stars far" />
+      <div className="stars near" />
+      {drifters && ['#e53935', '#1e88e5', '#fdd835'].map((hex, i) => (
+        <img key={hex} className={`drifter d${i}`} alt="" src={spriteURL(hex)} />
+      ))}
+    </div>
+  );
+}
+
+// ---------- Start screen ----------
+
 export function Home({ pid, onJoined }) {
+  useFullscreenOnTap();
   const [name, setName] = useState(savedName());
-  const [color, setColor] = useState(null);
   const [code, setCode] = useState(() => new URLSearchParams(window.location.search).get('room')?.toUpperCase() || '');
+  const [joining, setJoining] = useState(() => !!new URLSearchParams(window.location.search).get('room'));
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
 
   const go = async (event, data) => {
-    if (!name.trim()) { setErr('Enter your name first.'); return; }
+    if (!name.trim()) { setErr('Enter your name first.'); setJoining(false); return; }
     setBusy(true);
-    const res = await emit(event, { pid, name: name.trim(), color, ...data });
+    const res = await emit(event, { pid, name: name.trim(), ...data });
     setBusy(false);
     if (res.error) { setErr(res.error); return; }
     saveName(name.trim());
     onJoined(res.code);
   };
-  const create = () => go('createRoom');
+  const openJoin = () => {
+    if (!name.trim()) { setErr('Enter your name first.'); return; }
+    setErr(''); setJoining(true);
+  };
   const join = (e) => {
     e.preventDefault();
-    if (!code.trim()) { setErr('Enter the room code from the host.'); return; }
-    go('join', { code: code.trim() });
+    if (code.length < 4) { setErr('Enter the 4-letter code from the host.'); return; }
+    go('join', { code });
   };
 
   return (
-    <div className="screen home-screen">
-      <div className="card join home">
-        <div className="home-left">
-          <h1 className="title">Office<br className="title-br" /> Impostor</h1>
-          <p className="muted tagline">One of your colleagues is not who they seem.</p>
-          <label className="label" htmlFor="name">Your name</label>
-          <input id="name" className="input" maxLength={14} value={name}
-            onChange={(e) => { setName(e.target.value); setErr(''); }} placeholder="e.g. Dev" />
-          <div className="label">Pick a colour</div>
-          <div className="swatches">
-            {COLORS.map((c) => (
-              <button type="button" key={c.id}
-                className={`swatch ${color === c.id ? 'sel' : ''}`} style={{ background: c.hex }}
-                aria-label={c.id} onClick={() => setColor(c.id)} />
-            ))}
-          </div>
+    <div className="au-screen">
+      <Space />
+      <div className="home-main">
+        <h1 className="au-title">Office <span>Impostor</span></h1>
+        <label className="au-field">
+          <span className="au-label">Your name</span>
+          <input className="au-input" maxLength={14} value={name} placeholder="Enter name"
+            onChange={(e) => { setName(e.target.value); setErr(''); }} />
+        </label>
+        <div className="home-buttons">
+          <button className="au-btn green" disabled={busy} onClick={() => go('createRoom')}>Create game</button>
+          <button className="au-btn blue" disabled={busy} onClick={openJoin}>Join game</button>
         </div>
-        <div className="home-right">
-          <button className="btn huge" type="button" disabled={busy} onClick={create}>Create game</button>
-          <div className="or">or join a friend's game</div>
-          <form className="join-row" onSubmit={join}>
-            <input className="input code-input" maxLength={4} value={code} placeholder="CODE" autoCapitalize="characters"
-              autoComplete="off" spellCheck={false} aria-label="Room code"
-              onChange={(e) => { setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')); setErr(''); }} />
-            <button className="btn huge join-btn" type="submit" disabled={busy}>Join</button>
-          </form>
-          {err && <p className="error home-err">{err}</p>}
-        </div>
+        <div className="au-err" role="alert">{!joining && err}</div>
       </div>
+
+      {joining && (
+        <div className="au-overlay" onPointerDown={(e) => e.target === e.currentTarget && setJoining(false)}>
+          <form className="au-panel join-panel" onSubmit={join}>
+            <button type="button" className="au-close" aria-label="Close" onClick={() => setJoining(false)}>✕</button>
+            <h2 className="au-heading">Enter code</h2>
+            <input className="au-input code-boxes" maxLength={4} value={code} placeholder="····" autoFocus
+              autoCapitalize="characters" autoComplete="off" spellCheck={false} aria-label="Room code"
+              onChange={(e) => { setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')); setErr(''); }} />
+            <div className="au-err" role="alert">{err}</div>
+            <button className="au-btn green" type="submit" disabled={busy}>Join</button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
 
+// ---------- Lobby ----------
+
 export function Lobby({ view, onLeave }) {
+  useFullscreenOnTap();
   const me = view.me;
   const isHost = view.hostId === me.id;
-  const [err, setErr] = useState('');
   const s = view.settings;
   const taken = new Map(view.roster.map((r) => [r.color, r.id]));
-  const colorHex = (id) => COLORS.find((c) => c.id === id)?.hex;
-  const set = (k, v) => socket.emit('settings', { ...s, [k]: v });
-  const start = async () => { const r = await emit('start'); if (r.error) setErr(r.error); };
+  const myRow = view.roster.find((r) => r.id === me.id);
   const need = Math.max(0, s.minPlayers - view.roster.length);
-  const myName = view.roster.find((r) => r.id === me.id)?.name || '';
-  const [name, setName] = useState(myName);
+  const [err, setErr] = useState('');
+  const [panel, setPanel] = useState(null); // 'customize' | 'settings' | null
+  const [name, setName] = useState(myRow?.name || '');
   const [nameMsg, setNameMsg] = useState('');
   const [copied, setCopied] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+
+  const set = (k, v) => socket.emit('settings', { ...s, [k]: v });
+  const start = async () => { setErr(''); const r = await emit('start'); if (r.error) setErr(r.error); };
   const saveMyName = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
+    if (!name.trim() || name.trim() === myRow?.name) return;
     const res = await emit('setName', name);
     if (res.error) setNameMsg(res.error);
-    else { saveName(res.name); setName(res.name); setNameMsg('Saved'); setTimeout(() => setNameMsg(''), 1500); }
+    else { saveName(res.name); setName(res.name); setNameMsg('Saved!'); setTimeout(() => setNameMsg(''), 1500); }
   };
   // Phones get the native share sheet; elsewhere the invite is copied.
   const invite = async () => {
@@ -88,98 +136,99 @@ export function Lobby({ view, onLeave }) {
     const text = `Join my Office Impostor game! Room code: ${view.code}`;
     try {
       if (navigator.share) { await navigator.share({ title: 'Office Impostor', text, url }); return; }
-      await navigator.clipboard.writeText(`${text}
-${url}`);
+      await navigator.clipboard.writeText(`${text}\n${url}`);
       setCopied(true); setTimeout(() => setCopied(false), 1500);
     } catch { /* share cancelled */ }
   };
 
   return (
-    <div className="screen lobby-screen">
-      <div className="card lobby">
-        <div className="lobby-head">
-          <h1 className="title small">Lobby</h1>
-          <div className="room-code">
-            <span className="muted small">Room code</span>
-            <span className="code-big">{view.code}</span>
-            <button className="btn" onClick={invite}>{copied ? 'Copied!' : 'Invite'}</button>
-          </div>
-          <button className="btn tiny" onClick={onLeave}>Leave</button>
-        </div>
+    <div className="au-screen lobby-au">
+      <Space drifters={false} />
 
-        <div className="lobby-cols">
-          <div className="lobby-left">
-            <div className="label">Players ({view.roster.length}/{COLORS.length})</div>
-            <div className="roster">
-              {view.roster.map((r) => (
-                <div key={r.id} className={`who ${r.id === me.id ? 'me' : ''}`}>
-                  <img alt="" src={spriteURL(colorHex(r.color))} />
-                  <span className="who-name">{r.name}</span>
-                  {r.id === view.hostId && <span className="tag">host</span>}
-                </div>
-              ))}
-            </div>
-            <p className="muted small lobby-hint">Friends tap Join and enter <b>{view.code}</b>.</p>
-          </div>
-
-          <div className="lobby-right">
-            <form className="name-row" onSubmit={saveMyName}>
-              <label className="label" htmlFor="myname">Your name</label>
-              <div className="join-row">
-                <input id="myname" className="input" maxLength={14} value={name}
-                  onChange={(e) => { setName(e.target.value); setNameMsg(''); }} />
-                <button className="btn" type="submit" disabled={!name.trim() || name.trim() === myName}>Save</button>
-              </div>
-              {nameMsg && <div className={nameMsg === 'Saved' ? 'ok-msg small' : 'error small'}>{nameMsg}</div>}
-            </form>
-
-            <div className="label">Your colour</div>
-            <div className="swatches">
-              {COLORS.map((c) => (
-                <button key={c.id} disabled={taken.has(c.id) && taken.get(c.id) !== me.id}
-                  className={`swatch ${taken.get(c.id) === me.id ? 'sel' : ''}`} style={{ background: c.hex }}
-                  aria-label={c.id} onClick={() => socket.emit('setColor', c.id)} />
-              ))}
-            </div>
-
-            <button className="settings-summary" onClick={() => setShowSettings(true)}>
-              <span className="muted small">{isHost ? 'Game settings (tap to change)' : 'Game settings (host decides)'}</span>
-              <span className="small">
-                {s.impostors} impostor{s.impostors > 1 ? 's' : ''} · kill {s.killCooldown}s · meeting {s.meetingSeconds}s
-              </span>
-            </button>
-
-            {err && <p className="error small">{err}</p>}
-            {isHost ? (
-              <button className="btn huge" onClick={start} disabled={need > 0}>
-                {need > 0 ? `Waiting for ${need} more player${need > 1 ? 's' : ''}` : `Start game (${view.roster.length} players)`}
-              </button>
-            ) : <p className="muted center waiting">Waiting for the host to start…</p>}
-            <div className="controls muted small">
-              <span className="kbd-only">Move: WASD / arrows · Use: E · Report: R · Kill: Q · Vent: V · Map: Tab</span>
-              <span className="touch-only">Drag on the left half to move · tap the buttons to act</span>
-            </div>
-          </div>
-        </div>
+      <div className="lobby-top">
+        <button className="au-round" aria-label="Leave room" onClick={onLeave}>✕</button>
+        <div className="lobby-count">{view.roster.length}/{COLORS.length}</div>
+        <button className="au-round" aria-label="Game settings" onClick={() => setPanel('settings')}>⚙</button>
       </div>
 
-      {showSettings && (
-        <div className="modal-back" onPointerDown={(e) => e.target === e.currentTarget && setShowSettings(false)}>
-          <div className="modal settings-modal">
-            <div className="modal-head">
-              <h2>Game settings</h2>
-              <button className="x" onClick={() => setShowSettings(false)} aria-label="Close">✕</button>
+      {/* Everyone standing on the office floor */}
+      <div className="lineup" style={lineupSize(view.roster.length)}>
+        {view.roster.map((r) => (
+          <div key={r.id} className={`crew ${r.id === me.id ? 'me' : ''}`}>
+            <div className="crew-name">{r.id === view.hostId && <span className="crown">♛</span>}{r.name}</div>
+            <img alt="" src={spriteURL(colorHex(r.color))} />
+          </div>
+        ))}
+      </div>
+      <div className="floor" />
+
+      <div className="lobby-bottom">
+        <button className="au-btn small" onClick={() => { setName(myRow?.name || ''); setPanel('customize'); }}>
+          <img alt="" className="btn-sprite" src={spriteURL(colorHex(myRow?.color))} />Customize
+        </button>
+
+        <button className="code-tag" onClick={invite} aria-label="Share room code">
+          <span className="code-label">Code</span>
+          <span className="code-value">{view.code}</span>
+          <span className="code-share">{copied ? 'Copied!' : 'Tap to invite'}</span>
+        </button>
+
+        {isHost ? (
+          <button className="au-btn green start-btn" onClick={start} disabled={need > 0}>
+            Start
+            <span className="start-sub">{need > 0 ? `Need ${need} more` : `${view.roster.length} players`}</span>
+          </button>
+        ) : <div className="waiting-tag">Waiting for host…</div>}
+      </div>
+      {err && <div className="au-err lobby-err" role="alert">{err}</div>}
+
+      {panel === 'customize' && (
+        <div className="au-overlay" onPointerDown={(e) => e.target === e.currentTarget && setPanel(null)}>
+          <div className="au-panel customize">
+            <button className="au-close" aria-label="Close" onClick={() => setPanel(null)}>✕</button>
+            <div className="customize-preview">
+              <img alt="" src={spriteURL(colorHex(myRow?.color))} />
             </div>
-            {!isHost && <p className="muted small">Only the host can change these.</p>}
-            <div className="settings">
+            <div className="customize-body">
+              <form onSubmit={saveMyName}>
+                <span className="au-label">Name</span>
+                <div className="name-line">
+                  <input className="au-input" maxLength={14} value={name}
+                    onChange={(e) => { setName(e.target.value); setNameMsg(''); }} />
+                  <button className="au-btn small green" type="submit" disabled={!name.trim() || name.trim() === myRow?.name}>Save</button>
+                </div>
+                <div className={nameMsg === 'Saved!' ? 'au-ok' : 'au-err'}>{nameMsg}</div>
+              </form>
+              <span className="au-label">Colour</span>
+              <div className="color-grid">
+                {COLORS.map((c) => {
+                  const owner = taken.get(c.id);
+                  return (
+                    <button key={c.id} aria-label={c.id} disabled={!!owner && owner !== me.id}
+                      className={`color-cell ${owner === me.id ? 'sel' : ''}`} style={{ background: c.hex }}
+                      onClick={() => socket.emit('setColor', c.id)} />
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {panel === 'settings' && (
+        <div className="au-overlay" onPointerDown={(e) => e.target === e.currentTarget && setPanel(null)}>
+          <div className="au-panel settings-panel">
+            <button className="au-close" aria-label="Close" onClick={() => setPanel(null)}>✕</button>
+            <h2 className="au-heading">Game settings</h2>
+            {!isHost && <p className="au-note">Only the host can change these.</p>}
+            <div className="settings-grid">
               <Setting label="Impostors" value={s.impostors} min={1} max={3} disabled={!isHost} onChange={(v) => set('impostors', v)} />
-              <Setting label="Kill cooldown (s)" value={s.killCooldown} min={10} max={60} step={5} disabled={!isHost} onChange={(v) => set('killCooldown', v)} />
-              <Setting label="Meeting time (s)" value={s.meetingSeconds} min={30} max={180} step={15} disabled={!isHost} onChange={(v) => set('meetingSeconds', v)} />
-              <Setting label="Emergency meetings each" value={s.emergencyPerPlayer} min={0} max={3} disabled={!isHost} onChange={(v) => set('emergencyPerPlayer', v)} />
-              <Setting label="Crew vision (%)" value={s.crewVision} min={25} max={300} step={5} disabled={!isHost} onChange={(v) => set('crewVision', v)} />
-              <Setting label="Impostor vision (%)" value={s.impostorVision} min={25} max={300} step={5} disabled={!isHost} onChange={(v) => set('impostorVision', v)} />
+              <Setting label="Kill cooldown" unit="s" value={s.killCooldown} min={10} max={60} step={5} disabled={!isHost} onChange={(v) => set('killCooldown', v)} />
+              <Setting label="Meeting time" unit="s" value={s.meetingSeconds} min={30} max={180} step={15} disabled={!isHost} onChange={(v) => set('meetingSeconds', v)} />
+              <Setting label="Emergency meetings" value={s.emergencyPerPlayer} min={0} max={3} disabled={!isHost} onChange={(v) => set('emergencyPerPlayer', v)} />
+              <Setting label="Crew vision" unit="%" value={s.crewVision} min={25} max={300} step={5} disabled={!isHost} onChange={(v) => set('crewVision', v)} />
+              <Setting label="Impostor vision" unit="%" value={s.impostorVision} min={25} max={300} step={5} disabled={!isHost} onChange={(v) => set('impostorVision', v)} />
             </div>
-            <button className="btn huge" onClick={() => setShowSettings(false)}>Done</button>
           </div>
         </div>
       )}
@@ -187,14 +236,14 @@ ${url}`);
   );
 }
 
-function Setting({ label, value, min, max, step = 1, disabled, onChange }) {
+function Setting({ label, unit = '', value, min, max, step = 1, disabled, onChange }) {
   return (
-    <div className="setting">
+    <div className="au-setting">
       <span>{label}</span>
-      <div className="stepper">
-        <button className="btn tiny" disabled={disabled || value <= min} onClick={() => onChange(Math.max(min, value - step))}>−</button>
-        <b>{value}</b>
-        <button className="btn tiny" disabled={disabled || value >= max} onClick={() => onChange(Math.min(max, value + step))}>+</button>
+      <div className="au-stepper">
+        <button disabled={disabled || value <= min} onClick={() => onChange(Math.max(min, value - step))} aria-label={`Less ${label}`}>−</button>
+        <b>{value}{unit}</b>
+        <button disabled={disabled || value >= max} onClick={() => onChange(Math.min(max, value + step))} aria-label={`More ${label}`}>+</button>
       </div>
     </div>
   );

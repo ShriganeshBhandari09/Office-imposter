@@ -48,7 +48,7 @@ export default function App() {
 
   if (!connected && !view) {
     return (
-      <div className="screen"><div className="center">
+      <div className="au-screen au-loading"><div>
         <p className="muted">Connecting to the game server…</p>
         {slow && <p className="muted small">The server may be waking up. This can take up to a minute.</p>}
       </div></div>
@@ -57,7 +57,7 @@ export default function App() {
 
   let body;
   if (!room) body = <Home pid={pid} onJoined={enter} />;
-  else if (!view?.me) body = <div className="screen"><p className="muted">Joining room {room}…</p></div>;
+  else if (!view?.me) body = <div className="au-screen au-loading"><p>Joining room {room}…</p></div>;
   else if (view.phase === 'lobby') body = <Lobby view={view} onLeave={leave} />;
   else {
     body = (

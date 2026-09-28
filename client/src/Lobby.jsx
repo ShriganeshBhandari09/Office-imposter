@@ -123,6 +123,7 @@ export function Lobby({ view, onLeave }) {
 
   const set = (k, v) => socket.emit('settings', { ...s, [k]: v });
   const start = async () => { setErr(''); const r = await emit('start'); if (r.error) setErr(r.error); };
+  const addBot = async () => { setErr(''); const r = await emit('addBot'); if (r.error) setErr(r.error); };
   const saveMyName = async (e) => {
     e?.preventDefault();
     if (!name.trim() || name.trim() === myRow?.name) return;
@@ -154,9 +155,12 @@ export function Lobby({ view, onLeave }) {
       {/* Everyone standing on the office floor */}
       <div className="lineup" style={lineupSize(view.roster.length)}>
         {view.roster.map((r) => (
-          <div key={r.id} className={`crew ${r.id === me.id ? 'me' : ''}`}>
+          <div key={r.id} className={`crew ${r.id === me.id ? 'me' : ''} ${r.bot ? 'bot' : ''}`}>
             <div className="crew-name">{r.id === view.hostId && <span className="crown">♛</span>}{r.name}</div>
             <img alt="" src={spriteURL(colorHex(r.color))} />
+            {r.bot && (isHost
+              ? <button className="bot-tag remove" aria-label={`Remove ${r.name}`} onClick={() => socket.emit('removeBot', r.id)}>BOT ✕</button>
+              : <span className="bot-tag">BOT</span>)}
           </div>
         ))}
       </div>
@@ -174,10 +178,13 @@ export function Lobby({ view, onLeave }) {
         </button>
 
         {isHost ? (
-          <button className="au-btn green start-btn" onClick={start} disabled={need > 0}>
-            Start
-            <span className="start-sub">{need > 0 ? `Need ${need} more` : `${view.roster.length} players`}</span>
-          </button>
+          <div className="host-actions">
+            <button className="au-btn small blue" onClick={addBot} disabled={view.roster.length >= COLORS.length}>+ Bot</button>
+            <button className="au-btn green start-btn" onClick={start} disabled={need > 0}>
+              Start
+              <span className="start-sub">{need > 0 ? `Need ${need} more` : `${view.roster.length} players`}</span>
+            </button>
+          </div>
         ) : <div className="waiting-tag">Waiting for host…</div>}
       </div>
       {err && <div className="au-err lobby-err" role="alert">{err}</div>}

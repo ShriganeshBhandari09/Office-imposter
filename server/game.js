@@ -4,6 +4,7 @@ import {
   DEFAULT_SETTINGS, SABOTAGE_COOLDOWN, DOOR_SECONDS, DOOR_COOLDOWN, WIFI_SECONDS,
   dist, spawnPoint, collides, obstaclesFor, roomAt,
 } from '../client/src/shared/map.js';
+import { botName, botsTick, botsSawKill, botsMeetingStarted, botsMeetingEnded, botsHeardChat, resetBrain } from './bots.js';
 
 const now = () => Date.now();
 const secsLeft = (until) => Math.max(0, Math.ceil((until - now()) / 1000));
@@ -52,12 +53,23 @@ export class Game {
     let p = this.players.get(pid);
     if (p) {
       p.connected = true;
+      if (!this.hostId) this.hostId = pid;
       const clash = [...this.players.values()].some((q) => q.id !== pid && q.name.toLowerCase() === name.toLowerCase());
       if (this.phase === 'lobby' && !clash) p.name = name;
       return { ok: true };
     }
     if (this.phase !== 'lobby') return { error: 'A game is in progress. Wait for it to finish, then join.' };
-    if (this.players.size >= COLORS.length) return { error: 'The room is full.' };
+    // A real player always gets their seat: a bot makes room for them, and a bot with their name is renamed.
+    if (this.players.size >= COLORS.length) {
+      const bot = [...this.players.values()].reverse().find((q) => q.bot);
+      if (!bot) return { error: 'The room is full.' };
+      this.players.delete(bot.id);
+    }
+    for (const q of this.players.values()) {
+      if (q.bot && q.name.toLowerCase() === name.toLowerCase()) {
+        q.name = botName([...this.players.values()].map((x) => x.name).concat(name));
+      }
+    }
     if ([...this.players.values()].some((q) => q.name.toLowerCase() === name.toLowerCase())) {
       return { error: 'That name is taken.' };
     }
@@ -86,12 +98,35 @@ export class Game {
       p.connected = false;
     }
     if (this.hostId === pid) {
-      const next = [...this.players.values()].find((q) => q.connected);
+      const next = [...this.players.values()].find((q) => q.connected && !q.bot);
       this.hostId = next ? next.id : null;
     }
-    if (this.phase !== 'lobby' && ![...this.players.values()].some((q) => q.connected)) {
+    if (this.phase !== 'lobby' && this.isEmpty()) {
       this.backToLobby();
     }
+  }
+
+  // ---------- Bots ----------
+
+  addBot(pid) {
+    if (pid !== this.hostId || this.phase !== 'lobby') return { error: 'Only the host can add bots.' };
+    if (this.players.size >= COLORS.length) return { error: 'The room is full.' };
+    const taken = new Set([...this.players.values()].map((q) => q.color));
+    const id = `bot_${Math.random().toString(36).slice(2, 9)}`;
+    this.players.set(id, {
+      id, bot: true, name: botName([...this.players.values()].map((q) => q.name)),
+      color: COLORS.find((c) => !taken.has(c.id)).id, connected: true,
+      x: 129, y: 180, facing: 1, moving: false,
+      alive: true, role: 'crew', tasks: [], killCdUntil: 0, emergencyLeft: 0,
+      inVent: null, tpSeq: 0, lastMoveAt: now(), chatAt: 0, brain: null,
+    });
+    this.placeInLobby();
+    return { ok: true };
+  }
+
+  removeBot(pid, botId) {
+    if (pid !== this.hostId || this.phase !== 'lobby') return;
+    if (this.players.get(botId)?.bot) { this.players.delete(botId); this.placeInLobby(); }
   }
 
   // Players can rename themselves in the lobby.
@@ -109,7 +144,7 @@ export class Game {
   }
 
   // True when nobody is connected, so the room can be cleaned up.
-  isEmpty() { return ![...this.players.values()].some((p) => p.connected); }
+  isEmpty() { return ![...this.players.values()].some((p) => p.connected && !p.bot); }
 
   setColor(pid, color) {
     const p = this.players.get(pid);
@@ -159,6 +194,7 @@ export class Game {
       p.emergencyLeft = this.settings.emergencyPerPlayer;
       p.inVent = null;
       p.killAnim = null;
+      if (p.bot) resetBrain(p);
       this.teleport(p, spawnPoint(i, list.length));
     });
     // Drop anyone who disconnected in the lobby.
@@ -252,6 +288,9 @@ export class Game {
     v.killAnim = { at: t, killerColor: k.color, until: t + KILL_ANIM_MS };
     k.x = v.x; k.y = v.y; k.tpSeq++; k.lastMoveAt = t;
     k.killCdUntil = t + this.settings.killCooldown * 1000;
+    // A dead player can't keep holding a Wi-Fi panel.
+    if (this.sabotage?.holds) for (const [id, holder] of Object.entries(this.sabotage.holds)) if (holder === v.id) delete this.sabotage.holds[id];
+    botsSawKill(this, k, v);
     // If this kill wins the game, let the cutscene finish before the game-over screen.
     if (this.winner()) this.endAt = t + KILL_ANIM_MS;
   }
@@ -352,6 +391,7 @@ export class Game {
       chat: [],
     };
     this.bodies = [];
+    botsMeetingStarted(this, caller, body);
   }
 
   vote(pid, target) {
@@ -374,6 +414,7 @@ export class Game {
     p.chatAt = now();
     this.meeting.chat.push({ id: `${now()}${pid}`, pid, name: p.name, color: p.color, text });
     if (this.meeting.chat.length > 100) this.meeting.chat.shift();
+    botsHeardChat(this, p, text);
   }
 
   endMeeting() {
@@ -403,6 +444,7 @@ export class Game {
     };
     this.phase = 'ejection';
     this.meeting = null;
+    botsMeetingEnded(this);
   }
 
   afterEjection() {
@@ -450,6 +492,9 @@ export class Game {
 
   tick() {
     const t = now();
+    const dt = Math.min(0.2, (t - (this.lastTick || t)) / 1000);
+    this.lastTick = t;
+    botsTick(this, t, dt);
     if (this.phase === 'playing') {
       if (this.endAt && this.endAt <= t) { this.endAt = 0; this.checkWin(); return; }
       if (this.sabotage?.type === 'wifi' && this.sabotage.endsAt <= t) {
@@ -470,7 +515,7 @@ export class Game {
     const me = this.players.get(pid);
     const all = [...this.players.values()];
     const roster = all.map((p) => ({
-      id: p.id, name: p.name, color: p.color, alive: p.alive, connected: p.connected,
+      id: p.id, name: p.name, color: p.color, alive: p.alive, connected: p.connected, bot: !!p.bot,
       // Roles are only revealed to fellow impostors, or to everyone when the game ends.
       role: this.phase === 'ended' || (me?.role === 'impostor' && p.role === 'impostor') ? p.role : undefined,
     }));

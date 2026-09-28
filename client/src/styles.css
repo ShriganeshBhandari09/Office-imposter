@@ -367,3 +367,29 @@ h1, h2 { font-family: var(--pixel); font-weight: 400; line-height: 1.4; }
   .or { margin: 8px 0 4px; }
   .code-input { font-size: 16px; }
 }
+
+/* ---------- Start screen ---------- */
+.home-right { margin-top: 16px; }
+.home-err { margin: 10px 0 0; }
+/* Landscape phones: two columns so everything fits without scrolling. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .home-screen { overflow: hidden; padding: 10px; }
+  .card.home { max-width: 760px; display: grid; grid-template-columns: 1.15fr 1fr; gap: 22px; align-items: center; padding: 16px 20px; }
+  .home .title { font-size: 22px; margin: 0; }
+  .home .title-br { display: none; }
+  .home .tagline { margin: 4px 0 0; font-size: 15px; }
+  .home .label { margin: 10px 0 4px; font-size: 15px; }
+  .home .input { font-size: 19px; padding: 5px 10px; }
+  .home .swatches { gap: 6px; }
+  .home .swatch { width: 28px; height: 28px; border-width: 2px; }
+  .home-right { margin-top: 0; border-left: 3px dashed var(--line); padding-left: 22px; }
+  .home-right .btn.huge { margin-top: 0; padding: 10px; font-size: 22px; }
+  .home-right .or { margin: 14px 0 8px; font-size: 15px; }
+  .home-right .btn.huge.join-btn { padding: 6px 18px; }
+  .home-right .code-input { font-size: 16px; padding: 6px 4px; }
+}
+/* Very short screens: drop the tagline. */
+@media (max-height: 340px) and (orientation: landscape) {
+  .home .tagline { display: none; }
+  .home .label { margin: 6px 0 3px; }
+}

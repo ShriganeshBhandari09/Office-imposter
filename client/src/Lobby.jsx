@@ -28,23 +28,24 @@ export function Home({ pid, onJoined }) {
   };
 
   return (
-    <div className="screen">
-      <div className="card join">
-        <h1 className="title">Office<br />Impostor</h1>
-        <p className="muted">One of your colleagues is not who they seem.</p>
-        <label className="label" htmlFor="name">Your name</label>
-        <input id="name" className="input" maxLength={14} value={name}
-          onChange={(e) => { setName(e.target.value); setErr(''); }} placeholder="e.g. Dev" />
-        <div className="label">Pick a colour</div>
-        <div className="swatches">
-          {COLORS.map((c) => (
-            <button type="button" key={c.id}
-              className={`swatch ${color === c.id ? 'sel' : ''}`} style={{ background: c.hex }}
-              aria-label={c.id} onClick={() => setColor(c.id)} />
-          ))}
+    <div className="screen home-screen">
+      <div className="card join home">
+        <div className="home-left">
+          <h1 className="title">Office<br className="title-br" /> Impostor</h1>
+          <p className="muted tagline">One of your colleagues is not who they seem.</p>
+          <label className="label" htmlFor="name">Your name</label>
+          <input id="name" className="input" maxLength={14} value={name}
+            onChange={(e) => { setName(e.target.value); setErr(''); }} placeholder="e.g. Dev" />
+          <div className="label">Pick a colour</div>
+          <div className="swatches">
+            {COLORS.map((c) => (
+              <button type="button" key={c.id}
+                className={`swatch ${color === c.id ? 'sel' : ''}`} style={{ background: c.hex }}
+                aria-label={c.id} onClick={() => setColor(c.id)} />
+            ))}
+          </div>
         </div>
-        {err && <p className="error">{err}</p>}
-        <div className="home-actions">
+        <div className="home-right">
           <button className="btn huge" type="button" disabled={busy} onClick={create}>Create game</button>
           <div className="or">or join a friend's game</div>
           <form className="join-row" onSubmit={join}>
@@ -53,6 +54,7 @@ export function Home({ pid, onJoined }) {
               onChange={(e) => { setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')); setErr(''); }} />
             <button className="btn huge join-btn" type="submit" disabled={busy}>Join</button>
           </form>
+          {err && <p className="error home-err">{err}</p>}
         </div>
       </div>
     </div>

@@ -49,19 +49,20 @@ function buildStatic() {
   checker(g, 0, 0, WORLD.w, WORLD.h, WORKSPACE_FLOOR);
   for (const r of ROOMS) checker(g, r.x, r.y, r.w, r.h, r.floor, 24);
 
-  // Walkway stripe between Cafeteria and Den.
-  g.fillStyle = 'rgba(255,255,255,0.05)';
-  g.fillRect(0, 170, 258, 80);
-
-  // Desks with monitors and chairs.
+  // Desks with monitors and chairs. Desk sizes vary a lot on this map, so the layout adapts
+  // to each desk's width (how many monitor columns fit) and height (one row or two).
   for (const d of DESKS) {
     g.fillStyle = '#6d4c41'; g.fillRect(d.x, d.y, d.w, d.h);
     g.fillStyle = '#8d6e63'; g.fillRect(d.x + 4, d.y + 4, d.w - 8, d.h - 8);
-    for (let i = 0; i < 3; i++) {
-      monitor(g, d.x + 22 + i * 62, d.y + 12);
-      monitor(g, d.x + 22 + i * 62, d.y + 52);
-      chair(g, d.x + 24 + i * 62, d.y - 22);
-      chair(g, d.x + 24 + i * 62, d.y + d.h + 4);
+    const cols = Math.max(1, Math.floor((d.w - 20) / 62));
+    const twoRows = d.h >= 70;
+    for (let i = 0; i < cols; i++) {
+      const mx = d.x + 22 + i * 62;
+      if (mx + 26 > d.x + d.w - 4) break;
+      if (twoRows) { monitor(g, mx, d.y + 12); monitor(g, mx, d.y + 52); }
+      else monitor(g, mx, d.y + d.h / 2 - 9);
+      chair(g, mx + 2, d.y - 22);
+      chair(g, mx + 2, d.y + d.h + 4);
     }
     g.fillStyle = 'rgba(0,0,0,0.35)'; g.font = '14px VT323, monospace';
     g.fillText(d.name, d.x + d.w - 46, d.y + d.h - 6);
@@ -70,27 +71,32 @@ function buildStatic() {
     g.fillStyle = shadeHex(t.color, 0.8); g.fillRect(t.x, t.y, t.w, t.h);
     g.fillStyle = t.color; g.fillRect(t.x + 4, t.y + 4, t.w - 8, t.h - 8);
   }
-  // Emergency button on the cafeteria table.
+  // Emergency button in the Lobby.
   g.fillStyle = '#555'; g.beginPath(); g.arc(EMERGENCY_BUTTON.x, EMERGENCY_BUTTON.y, 14, 0, 7); g.fill();
   g.fillStyle = '#e53935'; g.beginPath(); g.arc(EMERGENCY_BUTTON.x, EMERGENCY_BUTTON.y, 10, 0, 7); g.fill();
 
   // Props next to task spots so each one reads as a real thing.
   const prop = (x, y, w, h, a, b) => { g.fillStyle = a; g.fillRect(x, y, w, h); if (b) { g.fillStyle = b; g.fillRect(x + 3, y + 3, w - 6, h - 6); } };
-  prop(200, 6, 52, 22, '#455a64', '#90a4ae');       // chai counter
-  prop(1156, 470, 40, 56, '#cfd8dc', '#eceff1');    // printer
-  prop(530, 4, 90, 14, '#eceff1', '#ffffff');       // whiteboard
-  prop(900, 4, 70, 12, '#212121', '#424242');       // projector screen
-  prop(1135, 6, 30, 16, '#37474f', '#263238');      // Call 1 phone
-  prop(1150, 96, 30, 14, '#37474f', '#263238');     // Call 2 headset stand
-  prop(1180, 44, 16, 30, '#263238', '#00e676');     // router
-  prop(1030, 110, 60, 40, '#212121', '#1b5e20');    // security camera console
-  prop(20, 280, 60, 40, '#5d4037', '#8d6e63');      // Den cabin desk
-  prop(212, 434, 26, 26, '#6d4c41', '#2e7d32');     // plant
-  prop(20, 580, 60, 40, '#5d4037', '#8d6e63');      // Hive cabin desk
-  prop(190, 500, 40, 24, '#212121', '#4fc3f7');     // manager PC
-  prop(1034, 640, 50, 18, '#fbc02d', '#212121');    // power panel on desk 6
-  prop(980, 188, 40, 20, '#263238', '#29b6f6');     // wifi panel security
-  prop(1140, 188, 40, 20, '#263238', '#29b6f6');    // wifi panel call 3
+  prop(30, 150, 52, 22, '#455a64', '#90a4ae');      // Cafeteria chai counter
+  prop(270, 15, 50, 40, '#263238', '#37474f');      // Spark server rack
+  prop(355, 15, 30, 30, '#212121', '#424242');      // Hive shredder
+  prop(395, 60, 40, 24, '#212121', '#4fc3f7');      // Hive manager PC
+  prop(20, 380, 50, 30, '#5d4037', '#8d6e63');      // Toilets supply shelf
+  prop(190, 460, 40, 40, '#455a64', '#607d8b');     // Pixel filing cabinet
+  prop(250, 500, 60, 40, '#5d4037', '#8d6e63');     // Den desk
+  prop(390, 510, 26, 26, '#6d4c41', '#2e7d32');     // Den plant
+  prop(860, 300, 60, 30, '#455a64', '#90a4ae');     // Lobby reception desk
+  prop(610, 280, 16, 30, '#263238', '#00e676');     // Lobby router (comms fix)
+  prop(630, 398, 90, 14, '#eceff1', '#ffffff');     // Conference whiteboard
+  prop(720, 500, 70, 14, '#212121', '#424242');     // Conference projector screen
+  prop(800, 450, 60, 40, '#212121', '#1b5e20');     // Security camera console
+  prop(860, 410, 40, 20, '#212121', '#424242');     // Security ID reader
+  prop(940, 400, 40, 20, '#263238', '#29b6f6');     // Wi-Fi panel (Security)
+  prop(898, 655, 40, 20, '#263238', '#29b6f6');     // Wi-Fi panel (Call 3)
+  prop(950, 495, 30, 16, '#37474f', '#263238');     // Call 1 phone
+  prop(950, 630, 30, 14, '#37474f', '#263238');     // Call 2 headset stand
+  prop(950, 660, 30, 16, '#263238', '#455a64');     // Call 3 laptop
+  prop(130, 260, 40, 20, '#fbc02d', '#212121');     // Toilets power panel (lights fix)
 
   // Vents.
   for (const v of VENTS) {
@@ -117,7 +123,9 @@ function buildStatic() {
   }
   g.fillStyle = 'rgba(0,0,0,0.25)';
   g.font = '14px "Press Start 2P", monospace';
-  g.fillText('Workspace', 780, 780);
+  g.fillText('Workspace', 720, 35);
+  g.fillText('Workspace', 660, 780);
+  g.fillText('Workspace', 220, 780);
   g.textAlign = 'left';
   return c;
 }

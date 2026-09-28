@@ -1,7 +1,7 @@
 // Shared map + game config. Imported by both the server and the React client.
 // Coordinates are in world units (1 unit = 1 pixel at zoom 1). Origin is top-left.
 
-export const WORLD = { w: 1200, h: 850 };
+export const WORLD = { w: 1000, h: 840 };
 export const WALL = 12;
 export const PLAYER_R = 14;
 export const SPEED = 190; // units per second
@@ -9,93 +9,106 @@ export const SPEED = 190; // units per second
 // Rooms. Doors are gaps in a wall: side + centre offset along that side + gap size.
 // A side lying on the outer boundary gets no wall (the boundary itself blocks).
 export const ROOMS = [
-  { id: 'cafeteria', name: 'Cafeteria', x: 0, y: 0, w: 258, h: 160, floor: '#c9a27a', lockable: true,
-    doors: [{ side: 'bottom', at: 129, size: 90 }, { side: 'right', at: 80, size: 80 }] },
-  { id: 'den', name: 'Den', x: 0, y: 260, w: 258, h: 230, floor: '#7a8fa6', lockable: true,
-    doors: [{ side: 'top', at: 190, size: 80 }, { side: 'right', at: 115, size: 90 }] },
-  { id: 'hive', name: 'Hive', x: 0, y: 490, w: 258, h: 146, floor: '#8a7fa8', lockable: true,
-    doors: [{ side: 'right', at: 73, size: 80 }] },
-  { id: 'conference', name: 'Conference', x: 510, y: 0, w: 468, h: 240, floor: '#6f9a8d', lockable: true,
-    doors: [{ side: 'bottom', at: 120, size: 90 }, { side: 'bottom', at: 360, size: 90 }] },
-  { id: 'security', name: 'Security', x: 978, y: 0, w: 126, h: 240, floor: '#8c8c8c', lockable: true,
-    doors: [{ side: 'bottom', at: 63, size: 80 }, { side: 'right', at: 40, size: 56 }, { side: 'right', at: 120, size: 56 }] },
-  { id: 'call1', name: 'Call 1', x: 1104, y: 0, w: 96, h: 80, floor: '#a58f6b', lockable: false,
-    doors: [{ side: 'left', at: 40, size: 56 }] },
-  { id: 'call2', name: 'Call 2', x: 1104, y: 80, w: 96, h: 80, floor: '#a58f6b', lockable: false,
-    doors: [{ side: 'left', at: 40, size: 56 }] },
-  { id: 'call3', name: 'Call 3', x: 1104, y: 160, w: 96, h: 80, floor: '#a58f6b', lockable: false,
-    doors: [{ side: 'bottom', at: 48, size: 60 }] },
+  { id: 'cafeteria', name: 'Cafeteria', x: 0, y: 0, w: 240, h: 240, floor: '#c9a27a', lockable: true,
+    doors: [{ side: 'right', at: 200, size: 40 }] },
+  { id: 'spark', name: 'Spark', x: 240, y: 0, w: 100, h: 130, floor: '#7a9a6f', lockable: true,
+    doors: [{ side: 'bottom', at: 50, size: 60 }] },
+  { id: 'hive', name: 'Hive', x: 340, y: 0, w: 100, h: 130, floor: '#8a7fa8', lockable: true,
+    doors: [{ side: 'bottom', at: 50, size: 60 }] },
+  { id: 'toilets', name: 'Toilets', x: 0, y: 240, w: 170, h: 210, floor: '#7d8c94', lockable: true,
+    doors: [{ side: 'right', at: 80, size: 40 }] },
+  { id: 'pixel', name: 'Pixel', x: 40, y: 450, w: 200, h: 120, floor: '#a58f6b', lockable: true,
+    doors: [{ side: 'bottom', at: 70, size: 60 }] },
+  { id: 'den', name: 'Den', x: 240, y: 450, w: 200, h: 120, floor: '#7a8fa6', lockable: true,
+    doors: [{ side: 'top', at: 100, size: 60 }] },
+  { id: 'lobby', name: 'Lobby', x: 400, y: 280, w: 600, h: 120, floor: '#9a8f6f', lockable: true,
+    doors: [{ side: 'top', at: 130, size: 60 }, { side: 'bottom', at: 80, size: 60 }] },
+  { id: 'conference', name: 'Conference', x: 520, y: 400, w: 280, h: 160, floor: '#6f9a8d', lockable: true,
+    doors: [{ side: 'bottom', at: 60, size: 60 }, { side: 'bottom', at: 220, size: 60 }] },
+  { id: 'security', name: 'Security', x: 800, y: 400, w: 200, h: 100, floor: '#8c8c8c', lockable: true,
+    doors: [{ side: 'bottom', at: 54, size: 48 }] },
+  { id: 'call1', name: 'Call 1', x: 900, y: 500, w: 100, h: 80, floor: '#a58f6b', lockable: false,
+    doors: [{ side: 'left', at: 40, size: 50 }] },
+  { id: 'call2', name: 'Call 2', x: 900, y: 580, w: 100, h: 80, floor: '#a58f6b', lockable: false,
+    doors: [{ side: 'left', at: 40, size: 50 }] },
+  { id: 'call3', name: 'Call 3', x: 900, y: 660, w: 100, h: 80, floor: '#a58f6b', lockable: false,
+    doors: [{ side: 'left', at: 40, size: 50 }] },
 ];
 
 export const WORKSPACE_FLOOR = '#5d6670';
 
 // Furniture that blocks movement.
 export const DESKS = [
-  { id: 'desk1', name: 'Desk 1', x: 400, y: 360, w: 200, h: 88 },
-  { id: 'desk2', name: 'Desk 2', x: 680, y: 360, w: 200, h: 88 },
-  { id: 'desk3', name: 'Desk 3', x: 960, y: 360, w: 200, h: 88 },
-  { id: 'desk4', name: 'Desk 4', x: 400, y: 560, w: 200, h: 88 },
-  { id: 'desk5', name: 'Desk 5', x: 680, y: 560, w: 200, h: 88 },
-  { id: 'desk6', name: 'Desk 6', x: 960, y: 560, w: 200, h: 88 },
+  { id: 'desk1', name: 'Desk 1', x: 530, y: 130, w: 120, h: 60 },
+  { id: 'desk2', name: 'Desk 2', x: 760, y: 130, w: 120, h: 60 },
+  { id: 'desk3', name: 'Desk 3', x: 520, y: 630, w: 280, h: 35 },
+  { id: 'desk4', name: 'Desk 4', x: 520, y: 730, w: 280, h: 35 },
+  { id: 'desk5', name: 'Desk 5', x: 30, y: 635, w: 100, h: 55 },
+  { id: 'desk6', name: 'Desk 6', x: 170, y: 635, w: 100, h: 55 },
+  { id: 'desk7', name: 'Desk 7', x: 310, y: 635, w: 100, h: 55 },
 ];
 export const TABLES = [
-  { id: 'cafe_table', x: 84, y: 55, w: 90, h: 50, color: '#8d6e63' },
-  { id: 'conf_table', x: 620, y: 85, w: 250, h: 70, color: '#795548' },
+  { id: 'table_tennis', x: 60, y: 40, w: 90, h: 50, color: '#2e7d32' },
 ];
 
-export const EMERGENCY_BUTTON = { x: 129, y: 80 };
-export const CAMERA_CONSOLE = { x: 1060, y: 130 };
+export const EMERGENCY_BUTTON = { x: 700, y: 340 };
+export const CAMERA_CONSOLE = { x: 820, y: 470 };
 
 // Tasks. `type` picks the mini-game component on the client.
 export const TASKS = [
-  { id: 'cafe_chai', name: 'Brew chai', room: 'Cafeteria', x: 225, y: 35, type: 'hold', seconds: 3 },
-  { id: 'cafe_spill', name: 'Clean the spill', room: 'Cafeteria', x: 55, y: 130, type: 'clicks', count: 6, thing: 'spill' },
-  { id: 'desk1_wires', name: 'Fix laptop wires', room: 'Desk 1', x: 500, y: 342, type: 'wires', count: 4 },
-  { id: 'desk2_upload', name: 'Upload attendance', room: 'Desk 2', x: 780, y: 342, type: 'upload', seconds: 6 },
-  { id: 'desk3_code', name: 'Type the code', room: 'Desk 3', x: 1060, y: 342, type: 'type' },
-  { id: 'desk4_notes', name: 'Sort sticky notes', room: 'Desk 4', x: 500, y: 666, type: 'sequence', count: 8 },
-  { id: 'desk5_charge', name: 'Charge the laptop', room: 'Desk 5', x: 780, y: 666, type: 'hold', seconds: 4 },
-  { id: 'ws_printer', name: 'Refill the printer', room: 'Workspace', x: 1170, y: 500, type: 'clicks', count: 5, thing: 'paper' },
-  { id: 'conf_projector', name: 'Align the projector', room: 'Conference', x: 940, y: 40, type: 'align' },
-  { id: 'conf_board', name: 'Wipe the whiteboard', room: 'Conference', x: 560, y: 35, type: 'clicks', count: 7, thing: 'scribble' },
-  { id: 'sec_id', name: 'Swipe ID card', room: 'Security', x: 1005, y: 50, type: 'swipe' },
-  { id: 'call1_phone', name: 'Answer the phone', room: 'Call 1', x: 1150, y: 30, type: 'keypad' },
-  { id: 'call2_headset', name: 'Reconnect headset', room: 'Call 2', x: 1160, y: 120, type: 'wires', count: 3 },
-  { id: 'den_sign', name: 'Sign the files', room: 'Den', x: 50, y: 300, type: 'sequence', count: 5 },
-  { id: 'den_plant', name: 'Water the plant', room: 'Den', x: 225, y: 455, type: 'hold', seconds: 3 },
-  { id: 'hive_shred', name: 'Shred documents', room: 'Hive', x: 50, y: 600, type: 'clicks', count: 6, thing: 'paper' },
-  { id: 'hive_reboot', name: "Reboot manager's PC", room: 'Hive', x: 210, y: 520, type: 'switches', count: 5 },
+  { id: 'cafe_chai', name: 'Brew chai', room: 'Cafeteria', x: 50, y: 170, type: 'hold', seconds: 3 },
+  { id: 'cafe_spill', name: 'Clean the spill', room: 'Cafeteria', x: 160, y: 210, type: 'clicks', count: 6, thing: 'spill' },
+  { id: 'spark_debug', name: 'Debug the server', room: 'Spark', x: 280, y: 40, type: 'wires', count: 4 },
+  { id: 'hive_shred', name: 'Shred documents', room: 'Hive', x: 365, y: 40, type: 'clicks', count: 6, thing: 'paper' },
+  { id: 'hive_reboot', name: "Reboot manager's PC", room: 'Hive', x: 410, y: 40, type: 'switches', count: 5 },
+  { id: 'toilets_supplies', name: 'Restock supplies', room: 'Toilets', x: 40, y: 400, type: 'clicks', count: 5, thing: 'supplies' },
+  { id: 'pixel_sort', name: 'Sort files', room: 'Pixel', x: 200, y: 480, type: 'sequence', count: 6 },
+  { id: 'den_sign', name: 'Sign the files', room: 'Den', x: 270, y: 530, type: 'sequence', count: 5 },
+  { id: 'den_plant', name: 'Water the plant', room: 'Den', x: 400, y: 530, type: 'hold', seconds: 3 },
+  { id: 'lobby_guests', name: 'Sign in guests', room: 'Lobby', x: 880, y: 320, type: 'swipe' },
+  { id: 'conf_projector', name: 'Align the projector', room: 'Conference', x: 760, y: 520, type: 'align' },
+  { id: 'conf_board', name: 'Wipe the whiteboard', room: 'Conference', x: 680, y: 408, type: 'clicks', count: 7, thing: 'scribble' },
+  { id: 'sec_id', name: 'Swipe ID card', room: 'Security', x: 880, y: 430, type: 'swipe' },
+  { id: 'call1_phone', name: 'Answer the phone', room: 'Call 1', x: 970, y: 510, type: 'keypad' },
+  { id: 'call2_headset', name: 'Reconnect headset', room: 'Call 2', x: 970, y: 645, type: 'wires', count: 3 },
+  { id: 'call3_type', name: 'Transcribe the call', room: 'Call 3', x: 970, y: 675, type: 'type' },
+  { id: 'desk1_upload', name: 'Upload attendance', room: 'Desk 1', x: 590, y: 160, type: 'upload', seconds: 6 },
+  { id: 'desk2_wires', name: 'Fix laptop wires', room: 'Desk 2', x: 820, y: 160, type: 'wires', count: 4 },
+  { id: 'desk3_type', name: 'Type the code', room: 'Desk 3', x: 660, y: 647, type: 'type' },
+  { id: 'desk4_printer', name: 'Refill the printer', room: 'Desk 4', x: 660, y: 747, type: 'clicks', count: 5, thing: 'paper' },
+  { id: 'desk5_notes', name: 'Sort sticky notes', room: 'Desk 5', x: 80, y: 662, type: 'sequence', count: 8 },
+  { id: 'desk6_charge', name: 'Charge the laptop', room: 'Desk 6', x: 220, y: 662, type: 'hold', seconds: 4 },
 ];
 export const TASKS_PER_PLAYER = 3;
 
 // Sabotages and where they are fixed.
 export const SABOTAGE_FIX = {
-  lights: [{ id: 'lights', name: 'Fix lights', x: 1060, y: 666, type: 'switches', count: 5 }],
-  comms: [{ id: 'comms', name: 'Fix network', x: 1180, y: 62, type: 'align' }],
+  lights: [{ id: 'lights', name: 'Fix lights', x: 152, y: 280, type: 'switches', count: 5 }],
+  comms: [{ id: 'comms', name: 'Fix network', x: 630, y: 298, type: 'align' }],
   wifi: [
-    { id: 'wifiA', name: 'Reset Wi-Fi (Security)', x: 1000, y: 205, type: 'holdSync' },
-    { id: 'wifiB', name: 'Reset Wi-Fi (Call 3)', x: 1160, y: 205, type: 'holdSync' },
+    { id: 'wifiA', name: 'Reset Wi-Fi (Security)', x: 960, y: 418, type: 'holdSync' },
+    { id: 'wifiB', name: 'Reset Wi-Fi (Call 3)', x: 918, y: 670, type: 'holdSync' },
   ],
 };
 
 // Vents come in linked pairs.
 export const VENTS = [
-  { id: 'v_den', x: 200, y: 400, to: 'v_conf' },
-  { id: 'v_conf', x: 560, y: 195, to: 'v_den' },
-  { id: 'v_cafe', x: 30, y: 30, to: 'v_call2' },
-  { id: 'v_call2', x: 1125, y: 142, to: 'v_cafe' },
-  { id: 'v_hive', x: 220, y: 605, to: 'v_ws_br' },
-  { id: 'v_ws_br', x: 1150, y: 800, to: 'v_hive' },
-  { id: 'v_sec', x: 1080, y: 215, to: 'v_ws_mid' },
-  { id: 'v_ws_mid', x: 690, y: 790, to: 'v_sec' },
+  { id: 'v_cafe', x: 190, y: 180, to: 'v_conf' },
+  { id: 'v_conf', x: 580, y: 440, to: 'v_cafe' },
+  { id: 'v_toilets', x: 80, y: 400, to: 'v_sec' },
+  { id: 'v_sec', x: 980, y: 430, to: 'v_toilets' },
+  { id: 'v_pixel', x: 200, y: 520, to: 'v_call2' },
+  { id: 'v_call2', x: 975, y: 595, to: 'v_pixel' },
+  { id: 'v_hive', x: 390, y: 40, to: 'v_den' },
+  { id: 'v_den', x: 400, y: 530, to: 'v_hive' },
 ];
 
 // Areas visible on security cameras.
 export const CAMERAS = [
-  { name: 'Cafeteria', x: 0, y: 0, w: 258, h: 260 },
-  { name: 'Conference', x: 510, y: 0, w: 468, h: 240 },
-  { name: 'Desks', x: 380, y: 300, w: 800, h: 380 },
-  { name: 'Cabins door', x: 258, y: 380, w: 180, h: 300 },
+  { name: 'Cafeteria', x: 0, y: 0, w: 240, h: 240 },
+  { name: 'Lobby', x: 400, y: 280, w: 600, h: 120 },
+  { name: 'Conference', x: 520, y: 400, w: 280, h: 160 },
+  { name: 'Security wing', x: 800, y: 400, w: 200, h: 340 },
 ];
 
 export const COLORS = [
@@ -119,6 +132,7 @@ export const DEFAULT_SETTINGS = {
   crewVision: 100, // percent
   impostorVision: 135, // percent
   minPlayers: 3,
+  tasksPerPlayer: 3,
 };
 
 export const SABOTAGE_COOLDOWN = 30;
@@ -223,7 +237,7 @@ export function roomAt(x, y) {
 }
 
 export function spawnPoint(i, n) {
-  // Players stand in a ring around the Cafeteria table with the emergency button.
+  // Players stand in a ring in the Lobby, around the emergency meeting button.
   const a = (i / Math.max(n, 1)) * Math.PI * 2 + Math.PI / 2;
-  return { x: EMERGENCY_BUTTON.x + Math.cos(a) * 88, y: EMERGENCY_BUTTON.y + Math.sin(a) * 52 };
+  return { x: EMERGENCY_BUTTON.x + Math.cos(a) * 160, y: EMERGENCY_BUTTON.y + Math.sin(a) * 28 };
 }

@@ -1,0 +1,589 @@
+<title>Office Impostor — Floor Plan v2 (Draft)</title>
+<style>
+  :root {
+    --bg: #f6f3ec;
+    --panel: #ffffff;
+    --line: #cbc3a9;
+    --grid: #e3ddc9;
+    --text: #1c2230;
+    --muted: #6b7280;
+    --wall: #2f3b52;
+    --window: #2f7dbb;
+    --room-fill: rgba(47, 59, 82, 0.05);
+    --open-fill: rgba(47, 125, 187, 0.07);
+    --door: #b3401f;
+    --task: #2f7a4f;
+    --sabotage: #b34700;
+    --font-display: ui-sans-serif, "Segoe UI", system-ui, sans-serif;
+    --font-mono: ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1117;
+      --panel: #161b24;
+      --line: #2c3444;
+      --grid: #1b212c;
+      --text: #e8eaf0;
+      --muted: #8a93a6;
+      --wall: #ffd740;
+      --window: #29b6f6;
+      --room-fill: rgba(255, 215, 64, 0.07);
+      --open-fill: rgba(41, 182, 246, 0.06);
+      --door: #ff8a50;
+      --task: #66bb6a;
+      --sabotage: #ff9100;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1117; --panel: #161b24; --line: #2c3444; --grid: #1b212c;
+    --text: #e8eaf0; --muted: #8a93a6; --wall: #ffd740; --window: #29b6f6;
+    --room-fill: rgba(255, 215, 64, 0.07); --open-fill: rgba(41, 182, 246, 0.06); --door: #ff8a50; --task: #66bb6a; --sabotage: #ff9100;
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f3ec; --panel: #ffffff; --line: #cbc3a9; --grid: #e3ddc9;
+    --text: #1c2230; --muted: #6b7280; --wall: #2f3b52; --window: #2f7dbb;
+    --room-fill: rgba(47, 59, 82, 0.05); --open-fill: rgba(47, 125, 187, 0.07); --door: #b3401f; --task: #2f7a4f; --sabotage: #b34700;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    padding: clamp(20px, 4vw, 56px);
+  }
+  .sheet {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .titleblock {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    border-bottom: 2px solid var(--wall);
+    padding-bottom: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .titleblock h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(22px, 3vw, 32px);
+    letter-spacing: 0.02em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  .titleblock p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    max-width: 60ch;
+  }
+  .meta {
+    text-align: right;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+  .meta b { color: var(--text); }
+
+  .diagram-wrap {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px;
+    overflow-x: auto;
+  }
+  svg { display: block; width: 100%; height: auto; min-width: 640px; }
+
+  .room-label {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    fill: var(--text);
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+  .room-label.small { font-size: 13px; }
+  .room-label.tiny { font-size: 10px; letter-spacing: 0.02em; }
+  .zone-label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    fill: var(--muted);
+    text-anchor: middle;
+    letter-spacing: 0.06em;
+  }
+  .door-tag {
+    font-size: 9px;
+    fill: var(--door);
+    text-anchor: middle;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+  .table {
+    fill: var(--panel);
+    stroke: var(--muted);
+    stroke-width: 1.5;
+  }
+  .vent-body { fill: var(--panel); stroke: var(--wall); stroke-width: 2; }
+  .vent-slat { stroke: var(--wall); stroke-width: 1.5; }
+  .vent-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    fill: var(--wall);
+    text-anchor: middle;
+  }
+  .task-body { fill: var(--task); stroke: var(--panel); stroke-width: 1.5; }
+  .task-num {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    fill: var(--panel);
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+  .sab-body { fill: var(--sabotage); stroke: var(--panel); stroke-width: 1.5; }
+  .sab-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    fill: var(--panel);
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+
+  .legend {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    margin: 20px 2px 0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .legend .item { display: flex; align-items: center; gap: 8px; }
+  .swatch { width: 18px; height: 12px; border-radius: 2px; flex: none; }
+  .swatch.room { background: var(--room-fill); border: 2px solid var(--wall); }
+  .swatch.open { background: var(--open-fill); }
+  .swatch.window { background: var(--window); }
+  .swatch.door { background: var(--door); height: 3px; width: 18px; }
+  .swatch.table { background: var(--panel); border: 1.5px solid var(--muted); }
+  .swatch.vent { background: var(--panel); border: 2px solid var(--wall); border-radius: 50%; width: 14px; height: 14px; }
+  .swatch.task { background: var(--task); border-radius: 50%; width: 14px; height: 14px; }
+  .swatch.sab { background: var(--sabotage); width: 12px; height: 12px; transform: rotate(45deg); border-radius: 2px; }
+
+  .review {
+    margin-top: 40px;
+  }
+  .review h2 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin: 0 0 4px;
+  }
+  .review > p {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 18px;
+  }
+  ol.checks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    counter-reset: chk;
+  }
+  ol.checks li {
+    counter-increment: chk;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--wall);
+    border-radius: 4px;
+    padding: 12px 16px 12px 48px;
+    position: relative;
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+  ol.checks li::before {
+    content: counter(chk);
+    position: absolute;
+    left: 16px;
+    top: 12px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    color: var(--wall);
+    font-size: 13px;
+  }
+  ol.checks b { color: var(--text); }
+
+  .tasks-section { margin-top: 40px; }
+  .tasks-section h2 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin: 0 0 4px;
+  }
+  .tasks-section > p { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+  .tasks-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
+  table.tasks { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 560px; }
+  table.tasks th, table.tasks td { text-align: left; padding: 7px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.tasks th {
+    font-family: var(--font-display);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    background: var(--panel);
+  }
+  table.tasks td:first-child { font-variant-numeric: tabular-nums; color: var(--task); font-weight: 700; }
+  table.tasks tr:last-child td { border-bottom: none; }
+  table.tasks td.type { color: var(--muted); font-size: 12px; }
+
+  footer {
+    margin-top: 36px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+</style>
+
+<div class="sheet">
+  <div class="titleblock">
+    <div>
+      <h1>Office Impostor — Floor Plan v2</h1>
+      <p>Digitized from your paper sketch (map/IMG20260928203834.jpg). Outer wall is chamfered, not a plain rectangle. Geometry below is a review draft — nothing is wired into map.js yet.</p>
+    </div>
+    <div class="meta">
+      Sheet <b>01 / 01</b><br>
+      Scale <b>N/A — game units</b><br>
+      Status <b>Draft for review</b>
+    </div>
+  </div>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 1040 880" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="paper-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M20 0H0V20" fill="none" stroke="var(--grid)" stroke-width="1"/>
+        </pattern>
+        <pattern id="window-hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="10" stroke="var(--window)" stroke-width="3"/>
+        </pattern>
+      </defs>
+
+      <rect x="0" y="0" width="1040" height="880" fill="var(--bg)"/>
+
+      <!-- Outer hull: chamfered rectangle, deliberately not a square. Grown again to give the whole floor more room.
+           Grid fill goes here (not on the outer canvas) so the graph-paper texture reads as the building's own floor. -->
+      <polygon points="70,20 970,20 1020,70 1020,810 970,860 70,860 20,810 20,70"
+        fill="url(#paper-grid)" stroke="var(--wall)" stroke-width="4" />
+
+      <!-- Window hatch bands along outer wall -->
+      <rect x="90" y="22" width="860" height="10" fill="url(#window-hatch)"/>
+      <rect x="1006" y="90" width="10" height="700" fill="url(#window-hatch)"/>
+      <rect x="90" y="848" width="860" height="10" fill="url(#window-hatch)"/>
+
+      <!-- Open-plan zones (drawn first, no full walls): the dominant space on the floor, like a real office — a big band above the Lobby and an even bigger one below it, wrapping around the Conference/Call corner -->
+      <rect x="460" y="20" width="560" height="280" rx="4" fill="var(--open-fill)"/>
+      <text class="zone-label" x="740" y="55">WORKSPACE</text>
+
+      <!-- two tables, north Workspace band -->
+      <rect class="table" x="550" y="150" width="120" height="60" rx="3"/>
+      <rect class="table" x="780" y="150" width="120" height="60" rx="3"/>
+
+
+
+      <!-- south band, grown taller again so it extends well past the (now smaller) Conference/Call cluster -->
+      <rect x="460" y="420" width="560" height="440" rx="4" fill="var(--open-fill)"/>
+      <text class="zone-label" x="680" y="800">WORKSPACE</text>
+
+      <!-- two tables spanning the full open width below Conference, clear of Call 3's column entirely -->
+      <rect class="table" x="540" y="650" width="280" height="35" rx="3"/>
+      <rect class="table" x="540" y="750" width="280" height="35" rx="3"/>
+
+
+      <rect x="20" y="595" width="440" height="265" rx="4" fill="var(--open-fill)"/>
+      <text class="zone-label" x="240" y="800">WORKSPACE</text>
+
+      <!-- three full workstation desks, bottom-left Workspace, smaller with real walking gaps between them -->
+      <rect class="table" x="50" y="655" width="100" height="55" rx="3"/>
+      <rect class="table" x="190" y="655" width="100" height="55" rx="3"/>
+      <rect class="table" x="330" y="655" width="100" height="55" rx="3"/>
+
+
+
+      <!-- Enclosed rooms -->
+      <!-- Cafeteria: widened (still a simple rectangle, no L-shape) to eat into the space that used to sit empty next to it -->
+      <rect x="20" y="20" width="240" height="240" rx="4" fill="var(--room-fill)" stroke="var(--wall)" stroke-width="3"/>
+      <text class="room-label small" x="140" y="225">CAFETERIA</text>
+      <rect x="256" y="200" width="8" height="40" fill="var(--door)"/>
+
+      <rect x="60" y="20" width="130" height="130" rx="3" fill="none" stroke="var(--wall)" stroke-width="2"/>
+      <text class="room-label small" x="125" y="85">TABLE</text>
+      <text class="room-label small" x="125" y="103">TENNIS</text>
+
+      
+      <!-- Spark/Hive narrowed to give Cafeteria the room it just took -->
+      <rect x="260" y="20" width="100" height="130" rx="4" fill="var(--room-fill)" stroke="var(--wall)" stroke-width="3"/>
+      <text class="room-label small" x="310" y="94">SPARK</text>
+      <rect x="280" y="146" width="60" height="8" fill="var(--door)"/>
+
+      <rect x="360" y="20" width="100" height="130" rx="4" fill="var(--room-fill)" stroke="var(--wall)" stroke-width="3"/>
+      <text class="room-label small" x="410" y="94">HIVE</text>
+      <rect x="380" y="146" width="60" height="8" fill="var(--door)"/>
+
+      <!-- open floor beside Cafeteria/Toilets: narrower now that Cafeteria is wider, still open the full way down to Pixel/Den -->
+      <rect x="260" y="150" width="200" height="110" fill="var(--open-fill)"/>
+      <rect x="190" y="260" width="270" height="180" fill="var(--open-fill)"/>
+
+      <!-- Toilets: extended down to meet Pixel directly (no gap), plus a new door on its right wall into the open floor -->
+      <rect x="20" y="260" width="170" height="210" rx="4" fill="var(--room-fill)" stroke="var(--wall)" stroke-width="3"/>
+      <text class="room-label" x="105" y="350">TOILETS</text>
+      <rect x="186" y="320" width="8" height="40" fill="var(--door)"/>
+
+      <!-- Pixel: flush against Toilets above (no door there anymore — Pixel reaches it via its own south door into open floor) -->
+      <rect x="60" y="470" width="200" height="120" rx="4" fill="var(--room-fill)" stroke="var(--wall)" stroke-width="3"/>
+      <text class="room-label" x="140" y="515">PIXEL</text>
+      <rect x="100" y="586" width="60" height="8" fill="var(--door)"/>
+
+      <rect x="260" y="470" width="200" height="120" rx="4" fill="var(--room-fill)" stroke="var(--wall)" stroke-width="3"/>
+      <text class="room-label" x="360" y="515">DEN</text>
+      <rect x="330" y="466" width="60" height="8" fill="var(--door)"/>
+
+      <!-- Lobby: pulled in to start right where the open strip ends, closing most of the empty gap; still reaches the exterior wall on the right -->
+      <rect x="420" y="300" width="600" height="120" rx="4" fill="var(--room-fill)" stroke="var(--wall)" stroke-width="3"/>
+      <text class="room-label" x="680" y="360">LOBBY</text>
+      <rect x="520" y="296" width="60" height="8" fill="var(--door)"/>
+      <rect x="470" y="416" width="60" height="8" fill="var(--door)"/>
+      <text class="door-tag" x="500" y="440">DOOR</text>
+
+      <!-- Conference, widened on the left into open floor (right edge stays put so it doesn't eat back into Sec) — still keeps a real gap from Den -->
+      <rect x="540" y="420" width="280" height="160" rx="4" fill="var(--room-fill)" stroke="var(--wall)" stroke-width="3"/>
+      <text class="room-label small" x="680" y="500">CONFERENCE</text>
+      <rect x="570" y="576" width="60" height="8" fill="var(--door)"/>
+      <rect x="730" y="576" width="60" height="8" fill="var(--door)"/>
+
+      <!-- Sec grown wider (took the space Conference just gave up) instead of taller -->
+      <rect x="820" y="420" width="200" height="100" rx="3" fill="var(--room-fill)" stroke="var(--wall)" stroke-width="2.5"/>
+      <text class="room-label tiny" x="950" y="470">SEC</text>
+      <rect x="850" y="516" width="48" height="8" fill="var(--door)"/>
+
+      <!-- Call 1-3, back to their normal height, sitting under the right portion of the now-wider Sec -->
+      <rect x="920" y="520" width="100" height="80" rx="3" fill="var(--room-fill)" stroke="var(--wall)" stroke-width="2.5"/>
+      <text class="room-label tiny" x="950" y="560">CALL 1</text>
+      <rect x="916" y="545" width="8" height="30" fill="var(--door)"/>
+
+      <rect x="920" y="600" width="100" height="80" rx="3" fill="var(--room-fill)" stroke="var(--wall)" stroke-width="2.5"/>
+      <text class="room-label tiny" x="950" y="640">CALL 2</text>
+      <rect x="916" y="625" width="8" height="30" fill="var(--door)"/>
+
+      <rect x="920" y="680" width="100" height="80" rx="3" fill="var(--room-fill)" stroke="var(--wall)" stroke-width="2.5"/>
+      <text class="room-label tiny" x="950" y="720">CALL 3</text>
+      <rect x="916" y="705" width="8" height="30" fill="var(--door)"/>
+
+      <!-- Sabotage fix points: near their wall/door, but pulled inside each room's interior so a player must actually be in the room to reach them -->
+      <g transform="translate(172,300)">
+        <rect class="sab-body" x="-8" y="-8" width="16" height="16" transform="rotate(45)"/>
+        <text class="sab-label" y="1">L</text>
+      </g>
+      <g transform="translate(650,318)">
+        <rect class="sab-body" x="-8" y="-8" width="16" height="16" transform="rotate(45)"/>
+        <text class="sab-label" y="1">C</text>
+      </g>
+      <g transform="translate(980,438)">
+        <rect class="sab-body" x="-8" y="-8" width="16" height="16" transform="rotate(45)"/>
+        <text class="sab-label" y="1">W</text>
+      </g>
+      <g transform="translate(938,690)">
+        <rect class="sab-body" x="-8" y="-8" width="16" height="16" transform="rotate(45)"/>
+        <text class="sab-label" y="1">W</text>
+      </g>
+
+      <!-- Tasks: numbered pins, matched to the table below the diagram -->
+      <g transform="translate(70,190)"><circle class="task-body" r="8"/><text class="task-num" y="1">1</text></g>
+      <g transform="translate(180,230)"><circle class="task-body" r="8"/><text class="task-num" y="1">2</text></g>
+      <g transform="translate(300,60)"><circle class="task-body" r="8"/><text class="task-num" y="1">3</text></g>
+      <g transform="translate(385,60)"><circle class="task-body" r="8"/><text class="task-num" y="1">4</text></g>
+      <g transform="translate(430,60)"><circle class="task-body" r="8"/><text class="task-num" y="1">5</text></g>
+      <g transform="translate(60,420)"><circle class="task-body" r="8"/><text class="task-num" y="1">6</text></g>
+      <g transform="translate(220,500)"><circle class="task-body" r="8"/><text class="task-num" y="1">7</text></g>
+      <g transform="translate(290,550)"><circle class="task-body" r="8"/><text class="task-num" y="1">8</text></g>
+      <g transform="translate(420,550)"><circle class="task-body" r="8"/><text class="task-num" y="1">9</text></g>
+      <g transform="translate(900,340)"><circle class="task-body" r="8"/><text class="task-num" y="1">10</text></g>
+      <g transform="translate(780,540)"><circle class="task-body" r="8"/><text class="task-num" y="1">11</text></g>
+      <g transform="translate(700,428)"><circle class="task-body" r="8"/><text class="task-num" y="1">12</text></g>
+      <g transform="translate(900,450)"><circle class="task-body" r="8"/><text class="task-num" y="1">13</text></g>
+      <g transform="translate(990,530)"><circle class="task-body" r="8"/><text class="task-num" y="1">14</text></g>
+      <g transform="translate(990,665)"><circle class="task-body" r="8"/><text class="task-num" y="1">15</text></g>
+      <g transform="translate(990,695)"><circle class="task-body" r="8"/><text class="task-num" y="1">16</text></g>
+      <g transform="translate(610,180)"><circle class="task-body" r="8"/><text class="task-num" y="1">17</text></g>
+      <g transform="translate(840,180)"><circle class="task-body" r="8"/><text class="task-num" y="1">18</text></g>
+      <g transform="translate(680,667)"><circle class="task-body" r="8"/><text class="task-num" y="1">19</text></g>
+      <g transform="translate(680,767)"><circle class="task-body" r="8"/><text class="task-num" y="1">20</text></g>
+      <g transform="translate(100,682)"><circle class="task-body" r="8"/><text class="task-num" y="1">21</text></g>
+      <g transform="translate(240,682)"><circle class="task-body" r="8"/><text class="task-num" y="1">22</text></g>
+
+      <!-- Vents: 4 linked pairs, only in enclosed rooms (not open floor) — flag any you want moved -->
+      <g transform="translate(210,200)">
+        <circle class="vent-body" r="11"/>
+        <line class="vent-slat" x1="-6" y1="-4" x2="6" y2="-4"/>
+        <line class="vent-slat" x1="-6" y1="0" x2="6" y2="0"/>
+        <line class="vent-slat" x1="-6" y1="4" x2="6" y2="4"/>
+        <text class="vent-label" x="0" y="24">V1</text>
+      </g>
+      <g transform="translate(600,460)">
+        <circle class="vent-body" r="11"/>
+        <line class="vent-slat" x1="-6" y1="-4" x2="6" y2="-4"/>
+        <line class="vent-slat" x1="-6" y1="0" x2="6" y2="0"/>
+        <line class="vent-slat" x1="-6" y1="4" x2="6" y2="4"/>
+        <text class="vent-label" x="0" y="24">V1</text>
+      </g>
+
+      <g transform="translate(100,420)">
+        <circle class="vent-body" r="11"/>
+        <line class="vent-slat" x1="-6" y1="-4" x2="6" y2="-4"/>
+        <line class="vent-slat" x1="-6" y1="0" x2="6" y2="0"/>
+        <line class="vent-slat" x1="-6" y1="4" x2="6" y2="4"/>
+        <text class="vent-label" x="0" y="24">V2</text>
+      </g>
+      <g transform="translate(1000,450)">
+        <circle class="vent-body" r="11"/>
+        <line class="vent-slat" x1="-6" y1="-4" x2="6" y2="-4"/>
+        <line class="vent-slat" x1="-6" y1="0" x2="6" y2="0"/>
+        <line class="vent-slat" x1="-6" y1="4" x2="6" y2="4"/>
+        <text class="vent-label" x="0" y="24">V2</text>
+      </g>
+
+      <g transform="translate(220,540)">
+        <circle class="vent-body" r="11"/>
+        <line class="vent-slat" x1="-6" y1="-4" x2="6" y2="-4"/>
+        <line class="vent-slat" x1="-6" y1="0" x2="6" y2="0"/>
+        <line class="vent-slat" x1="-6" y1="4" x2="6" y2="4"/>
+        <text class="vent-label" x="0" y="24">V3</text>
+      </g>
+      <g transform="translate(995,615)">
+        <circle class="vent-body" r="11"/>
+        <line class="vent-slat" x1="-6" y1="-4" x2="6" y2="-4"/>
+        <line class="vent-slat" x1="-6" y1="0" x2="6" y2="0"/>
+        <line class="vent-slat" x1="-6" y1="4" x2="6" y2="4"/>
+        <text class="vent-label" x="0" y="24">V3</text>
+      </g>
+
+      <g transform="translate(410,60)">
+        <circle class="vent-body" r="11"/>
+        <line class="vent-slat" x1="-6" y1="-4" x2="6" y2="-4"/>
+        <line class="vent-slat" x1="-6" y1="0" x2="6" y2="0"/>
+        <line class="vent-slat" x1="-6" y1="4" x2="6" y2="4"/>
+        <text class="vent-label" x="0" y="24">V4</text>
+      </g>
+      <g transform="translate(420,550)">
+        <circle class="vent-body" r="11"/>
+        <line class="vent-slat" x1="-6" y1="-4" x2="6" y2="-4"/>
+        <line class="vent-slat" x1="-6" y1="0" x2="6" y2="0"/>
+        <line class="vent-slat" x1="-6" y1="4" x2="6" y2="4"/>
+        <text class="vent-label" x="0" y="24">V4</text>
+      </g>
+
+      <!-- Compass -->
+      <g transform="translate(55,760)">
+        <circle r="20" fill="var(--panel)" stroke="var(--line)" stroke-width="1.5"/>
+        <path d="M0,-14 L5,3 L0,-1.5 L-5,3 Z" fill="var(--wall)"/>
+        <text x="0" y="-24" text-anchor="middle" font-family="var(--font-display)" font-size="10" fill="var(--muted)" font-weight="700">N</text>
+      </g>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <div class="item"><span class="swatch room"></span>Enclosed room</div>
+    <div class="item"><span class="swatch open"></span>Open-plan workspace</div>
+    <div class="item"><span class="swatch window"></span>Window wall</div>
+    <div class="item"><span class="swatch door"></span>Doorway</div>
+    <div class="item"><span class="swatch table"></span>Table / desk</div>
+    <div class="item"><span class="swatch vent"></span>Vent (matching numbers are linked)</div>
+    <div class="item"><span class="swatch task"></span>Task (numbered, see table below)</div>
+    <div class="item"><span class="swatch sab"></span>Sabotage fix (L / C / W)</div>
+  </div>
+
+  <div class="tasks-section">
+    <h2>Tasks (draft)</h2>
+    <p>22 tasks across every enclosed room plus the desk/table clusters — roughly a third more than the current map's 17, matching how much bigger this layout got. TASKS_PER_PLAYER can stay at 3, or move up now that there's more to pick from.</p>
+    <div class="tasks-table-wrap">
+      <table class="tasks">
+        <thead><tr><th>#</th><th>Task</th><th>Room</th><th class="type">Type</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Brew chai</td><td>Cafeteria</td><td class="type">hold</td></tr>
+          <tr><td>2</td><td>Clean the spill</td><td>Cafeteria</td><td class="type">clicks</td></tr>
+          <tr><td>3</td><td>Debug the server</td><td>Spark</td><td class="type">wires</td></tr>
+          <tr><td>4</td><td>Shred documents</td><td>Hive</td><td class="type">clicks</td></tr>
+          <tr><td>5</td><td>Reboot manager's PC</td><td>Hive</td><td class="type">switches</td></tr>
+          <tr><td>6</td><td>Restock supplies</td><td>Toilets</td><td class="type">clicks</td></tr>
+          <tr><td>7</td><td>Sort files</td><td>Pixel</td><td class="type">sequence</td></tr>
+          <tr><td>8</td><td>Sign the files</td><td>Den</td><td class="type">sequence</td></tr>
+          <tr><td>9</td><td>Water the plant</td><td>Den</td><td class="type">hold</td></tr>
+          <tr><td>10</td><td>Sign in guests</td><td>Lobby</td><td class="type">swipe</td></tr>
+          <tr><td>11</td><td>Align the projector</td><td>Conference</td><td class="type">align</td></tr>
+          <tr><td>12</td><td>Wipe the whiteboard</td><td>Conference</td><td class="type">clicks</td></tr>
+          <tr><td>13</td><td>Swipe ID card</td><td>Sec</td><td class="type">swipe</td></tr>
+          <tr><td>14</td><td>Answer the phone</td><td>Call 1</td><td class="type">keypad</td></tr>
+          <tr><td>15</td><td>Reconnect headset</td><td>Call 2</td><td class="type">wires</td></tr>
+          <tr><td>16</td><td>Transcribe the call</td><td>Call 3</td><td class="type">type</td></tr>
+          <tr><td>17</td><td>Upload attendance</td><td>Workspace (north)</td><td class="type">upload</td></tr>
+          <tr><td>18</td><td>Fix laptop wires</td><td>Workspace (north)</td><td class="type">wires</td></tr>
+          <tr><td>19</td><td>Type the code</td><td>Workspace (south)</td><td class="type">type</td></tr>
+          <tr><td>20</td><td>Refill the printer</td><td>Workspace (south)</td><td class="type">clicks</td></tr>
+          <tr><td>21</td><td>Sort sticky notes</td><td>Workspace (SW)</td><td class="type">sequence</td></tr>
+          <tr><td>22</td><td>Charge the laptop</td><td>Workspace (SW)</td><td class="type">hold</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 style="margin-top: 28px;">Sabotages (draft)</h2>
+    <p>Matches the current game's three sabotages. Wi-Fi needs two players holding sync at once — its two fix points are deliberately in different rooms (Sec and Call 3) at opposite ends of that corner.</p>
+    <div class="tasks-table-wrap">
+      <table class="tasks">
+        <thead><tr><th>Mark</th><th>Sabotage</th><th>Fix location</th><th class="type">Type</th></tr></thead>
+        <tbody>
+          <tr><td>L</td><td>Fix lights</td><td>On the wall, right above the Toilets door</td><td class="type">switches</td></tr>
+          <tr><td>C</td><td>Fix network</td><td>Lobby</td><td class="type">align</td></tr>
+          <tr><td>W</td><td>Reset Wi-Fi (Sec)</td><td>Sec</td><td class="type">holdSync</td></tr>
+          <tr><td>W</td><td>Reset Wi-Fi (Call 3)</td><td>Call 3</td><td class="type">holdSync</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="review">
+    <h2>Confirm before this becomes game geometry</h2>
+    <p>These are the calls I made building out your latest changes. Flag any that are wrong and I'll redraw before touching client/src/shared/map.js.</p>
+    <ol class="checks">
+      <li><b>Orientation</b> — I kept your sketch's top edge (the "Window" running past Cafeteria/Table Tennis/Spark/Hive) as north/top of the in-game map. Say the word if it should be flipped or rotated.</li>
+      <li><b>Cafeteria</b> — now L-shaped: still wraps Table Tennis at top, plus a new wing extending right under Spark/Hive. Its door moved off Toilets onto the new right wall, into the open Workspace. No door remains between Cafeteria and Toilets — full wall now.</li>
+      <li><b>Toilets</b> — extended down to sit flush against Pixel with a doorway joining them directly (no more open gap there), and gained a new door on its right wall into the open floor beside it.</li>
+      <li><b>Lobby</b> — runs the full width of the building, touching the exterior wall on the right. Its door moved from the west wall to the south wall, opening onto the Workspace floor below (just left of Conference).</li>
+      <li><b>Conference</b> — extended left, now much bigger, with two doors: one on its new left wall into the open Workspace, one into Sec (unchanged). Still keeps a real gap of open floor between it and Den.</li>
+      <li><b>Call 1 / Call 2 / Call 3 / Sec</b> — each Call room now has its own door into Sec; Sec's existing door to Conference stays, so every room in that corner cluster has at least one way in.</li>
+      <li><b>Vents &amp; task spots</b> — your sketch doesn't mark these, so none are placed yet. I'll add them once the room shapes above are locked in.</li>
+    </ol>
+  </div>
+
+  <footer>
+    <span>office-imposter · map draft</span>
+    <span>source: map/IMG20260928203834.jpg</span>
+  </footer>
+</div>

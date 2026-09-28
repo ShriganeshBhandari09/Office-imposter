@@ -233,6 +233,7 @@ export function Lobby({ view, onLeave }) {
               <Setting label="Kill cooldown" unit="s" value={s.killCooldown} min={10} max={60} step={5} disabled={!isHost} onChange={(v) => set('killCooldown', v)} />
               <Setting label="Meeting time" unit="s" value={s.meetingSeconds} min={30} max={180} step={15} disabled={!isHost} onChange={(v) => set('meetingSeconds', v)} />
               <Setting label="Emergency meetings" value={s.emergencyPerPlayer} min={0} max={3} disabled={!isHost} onChange={(v) => set('emergencyPerPlayer', v)} />
+              <Setting label="Tasks per player" value={s.tasksPerPlayer} min={1} max={8} disabled={!isHost} onChange={(v) => set('tasksPerPlayer', v)} />
               <Setting label="Crew vision" unit="%" value={s.crewVision} min={25} max={300} step={5} disabled={!isHost} onChange={(v) => set('crewVision', v)} />
               <Setting label="Impostor vision" unit="%" value={s.impostorVision} min={25} max={300} step={5} disabled={!isHost} onChange={(v) => set('impostorVision', v)} />
             </div>

@@ -1,5 +1,5 @@
 import {
-  WORLD, TASKS, TASKS_PER_PLAYER, SABOTAGE_FIX, VENTS, COLORS, ROOMS,
+  WORLD, TASKS, SABOTAGE_FIX, VENTS, COLORS, ROOMS,
   EMERGENCY_BUTTON, USE_RANGE, KILL_RANGE, REPORT_RANGE, SPEED,
   DEFAULT_SETTINGS, SABOTAGE_COOLDOWN, DOOR_SECONDS, DOOR_COOLDOWN, WIFI_SECONDS,
   dist, spawnPoint, collides, obstaclesFor, roomAt,
@@ -165,6 +165,7 @@ export class Game {
       emergencyPerPlayer: clamp(s.emergencyPerPlayer, 0, 3, this.settings.emergencyPerPlayer),
       crewVision: clamp(s.crewVision, 25, 300, this.settings.crewVision),
       impostorVision: clamp(s.impostorVision, 25, 300, this.settings.impostorVision),
+      tasksPerPlayer: clamp(s.tasksPerPlayer, 1, TASKS.length, this.settings.tasksPerPlayer),
     };
   }
 
@@ -189,7 +190,7 @@ export class Game {
     list.forEach((p, i) => {
       p.alive = true;
       p.role = impostorIds.has(p.id) ? 'impostor' : 'crew';
-      p.tasks = shuffle(TASKS).slice(0, TASKS_PER_PLAYER).map((task) => ({ id: task.id, done: false }));
+      p.tasks = shuffle(TASKS).slice(0, this.settings.tasksPerPlayer).map((task) => ({ id: task.id, done: false }));
       p.killCdUntil = t + 15000;
       p.emergencyLeft = this.settings.emergencyPerPlayer;
       p.inVent = null;

@@ -386,6 +386,15 @@ function planMeeting(game, p, b, t, caller, body) {
   const ends = m.endsAt;
   b.meet = { lines: [], voteAt: Math.min(ends - 3000, t + rand(8000, 25000)), voted: false, defended: false, accusedBy: null };
   if (!p.alive) return;
+  // Bots that didn't personally spot the body still know who they saw nearby recently;
+  // without this, only the reporter ever gains suspicion and everyone else defaults to skip.
+  if (body && p.role !== 'impostor' && b.found?.id !== body.id) {
+    for (const q of game.players.values()) {
+      if (q.id === p.id || !q.alive) continue;
+      const s = b.seen[q.id];
+      if (s && t - s.t < 20000 && dist(s, body) < 260) b.sus[q.id] = (b.sus[q.id] || 0) + 2;
+    }
+  }
   const room = roomAt(p.x, p.y);
   // The reporter talks first, everyone else a moment later.
   let at = caller.id === p.id ? t + rand(800, 1600) : t + rand(3000, 7000);
@@ -498,13 +507,17 @@ export function botsMeetingEnded(game) {
 }
 
 // Bots listen to the meeting chat: naming someone makes crew bots a bit more suspicious of them,
-// and a bot that gets named defends itself.
+// and a bot that gets named defends itself. Real chat rarely uses exact accusing words, so any
+// mention of a living player counts a little, and an accusing word alongside it counts a lot more.
 const ACCUSE = /\b(sus|kill|killed|killer|vote|saw|near|impostor|imposter|vent|vented|liar|lying)\b/i;
 export function botsHeardChat(game, speaker, text) {
-  if (!ACCUSE.test(text)) return;
   const lower = text.toLowerCase();
   const named = [...game.players.values()].filter((q) => q.id !== speaker.id && q.alive
     && (lower.includes(q.name.toLowerCase()) || new RegExp(`\\b${q.color}\\b`).test(lower)));
+  if (!named.length) return;
+  const accuseHit = ACCUSE.test(text);
+  const weight = accuseHit ? (speaker.bot ? 1 : 2) : (speaker.bot ? 0 : 1);
+  if (!weight) return;
   const t = Date.now();
   for (const q of named) {
     for (const p of game.players.values()) {
@@ -517,7 +530,7 @@ export function botsHeardChat(game, speaker, text) {
           say(b, pick([`Not me! I was in ${roomAt(p.x, p.y)}.`, `Why me? I was doing tasks.`, `${speaker.name}, that's sus of you.`]), t + rand(1500, 3500));
         }
       } else if (p.role !== 'impostor') {
-        b.sus[q.id] = (b.sus[q.id] || 0) + (speaker.bot ? 1 : 2);
+        b.sus[q.id] = (b.sus[q.id] || 0) + weight;
       }
     }
   }

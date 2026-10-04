@@ -1,0 +1,223 @@
+/* Phone layouts. Loaded last so it wins over the desktop and short-landscape rules.
+   Portrait phones get stacked screens; landscape phones keep the compact layouts in screens.css / hud.css. */
+
+/* The game is played in landscape: in portrait on a phone, ask the player to turn it. */
+.rotate-hint { display: none; }
+@media (orientation: portrait) and (pointer: coarse) {
+  .rotate-hint { position: absolute; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+    background: rgba(3,5,12,.96); color: var(--ink); text-align: center; padding: 24px; font-family: var(--font-display); font-size: 22px; text-transform: uppercase; }
+  .rotate-hint .phone { width: 56px; height: 96px; border: 4px solid var(--yellow-500); border-radius: 12px; animation: rotate-phone 2.4s ease-in-out infinite; }
+}
+@keyframes rotate-phone { 0%, 25% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+
+/* Never let the page itself scroll or bounce. */
+html, body { overscroll-behavior: none; }
+@media (max-width: 700px) and (orientation: portrait) {
+  /* Keep text fields at 16px so iOS does not zoom in when one is focused. */
+  .ui-input, .chat-form .ui-input, .chat-field .ui-input { font-size: 16px; }
+
+  /* ---------- Shared ---------- */
+  .screen-bar { grid-template-columns: auto 1fr auto; padding: 8px 12px; gap: 8px; padding-top: calc(8px + env(safe-area-inset-top)); }
+  .screen-title h1 { font-size: 20px; line-height: 24px; }
+  .screen-title p { display: none; }
+  .ui-modal-back { padding: 10px; }
+  .ui-modal { padding: 18px 16px; border-radius: 20px; }
+  .ui-modal h2 { font-size: 24px; }
+  .controls-grid { grid-template-columns: repeat(2, 1fr); }
+  .sound-row { grid-template-columns: 70px 1fr 32px; gap: 10px; }
+
+
+  /* ---------- Connecting ---------- */
+  .conn-body { padding: 0 16px; }
+  .conn-title { font-size: 26px; }
+  .conn-steps li { padding: 12px 14px; font-size: 16px; }
+  .conn-tip { margin-top: 20px; padding: 12px 14px; }
+
+  /* ---------- Customize ---------- */
+  .cz-body { grid-template-columns: 1fr; gap: 14px; padding: 12px; }
+  .cz-preview { padding: 14px; }
+  .cz-stage { height: 150px; margin-bottom: 8px; }
+  .cz-hero { width: 100px !important; height: auto !important; }
+  .cz-states { display: none; }
+  .cz-tabs .tab { flex: 1; padding: 0 8px; }
+  .cz-block { padding: 14px; margin-bottom: 12px; }
+  .cz-block h2 { font-size: 20px; }
+  .cz-colors { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .swatch { height: 48px; }
+  .cz-hats { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+
+  /* ---------- Game settings ---------- */
+  .settings-body { padding: 12px 12px calc(24px + env(safe-area-inset-bottom)); }
+  .settings-grid { gap: 12px; }
+  .set-card { padding: 12px 14px 6px; }
+  .preset-row { gap: 8px; }
+  .pill { padding: 0 16px; height: 38px; font-size: 14px; }
+  .rec { margin-left: 0; width: 100%; }
+  .bar-actions { gap: 8px; }
+
+  /* ---------- In-game HUD ---------- */
+  .game .joy-zone { width: 100%; }
+  .game .joy-hint { left: 50%; transform: translateX(-50%); bottom: 64px; }
+  .game.touch .hud-left { left: 8px; top: calc(8px + env(safe-area-inset-top)); width: calc(100vw - 8px - 8px - 150px); gap: 6px; }
+  .game.touch .hud-left .ui-panel { padding: 8px 10px; }
+  .hud-tasks { max-height: 32vh; overflow: auto; }
+  .hud-tasks ul { gap: 6px; }
+  .hud-tasks li b { font-size: 13px; }
+  .hud-tasks li small { display: block; font-size: 11px; }
+  .game.touch .hud-top-right { right: 8px; top: calc(8px + env(safe-area-inset-top)); gap: 6px; }
+  .game.touch .hud-icon { width: 44px; height: 44px; }
+  .game.touch .hud-room { left: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); font-size: 13px; padding: 5px 10px; max-width: 34vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Action buttons: a 2-wide cluster on the right so five of them still fit beside the thumb. */
+  .game.touch .hud-dock { right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); max-width: 60vw; flex-wrap: wrap-reverse; justify-content: flex-end; gap: 8px; }
+  .game.touch .hud-act { width: 68px; height: 68px; font-size: 12px; border-radius: 14px; }
+  .game.touch .hud-act.main { width: 88px; height: 88px; }
+  .game.touch .hud-act em { font-size: 28px; }
+  .game.touch .alert-banner { top: auto; bottom: calc(200px + env(safe-area-inset-bottom)); width: calc(100vw - 16px); max-width: none; gap: 10px; padding: 8px 12px; }
+  .game.touch .alert-banner h2 { font-size: 17px; }
+  .game.touch .alert-banner .timer b { font-size: 26px; }
+  .game.touch .alert-banner.small { width: auto; max-width: 90vw; }
+  .game.touch .emergency-task { top: auto; bottom: calc(48px + env(safe-area-inset-bottom)); left: 8px; width: 38vw; padding: 8px 10px; }
+  .game.touch .emergency-task b { font-size: 15px; }
+  .game.touch .open-fix { right: 8px; bottom: calc(270px + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(270px + env(safe-area-inset-bottom)); max-width: 92vw; font-size: 14px; padding: 8px 14px; }
+  .toast.vent { top: calc(64px + env(safe-area-inset-top)); bottom: auto; }
+  .ghost-banner { width: calc(100vw - 16px); top: auto; bottom: calc(110px + env(safe-area-inset-bottom)); }
+  .ghost-chat { right: 8px; left: 8px; width: auto; top: auto; bottom: calc(180px + env(safe-area-inset-bottom)); height: min(240px, 36vh); }
+
+  /* HUD dialogs */
+  .sab-types { grid-template-columns: 1fr; }
+  .pause-actions { grid-template-columns: 1fr; }
+  .rules-list { grid-template-columns: 1fr; }
+
+  /* ---------- Map ---------- */
+  .map-screen { padding: calc(10px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom)); }
+  .map-screen h1 { font-size: 24px; }
+  .map-close { width: 44px; height: 44px; }
+  .map-body { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1.2fr) minmax(0, 1fr); gap: 10px; }
+  .map-body:has(.map-side:empty), .map-body > :only-child { grid-template-rows: 1fr; }
+
+  /* ---------- Meeting ---------- */
+  .meeting-wrap { padding: 0; }
+  .meeting-panel { border-radius: 0; border-width: 0; height: 100%; }
+  .mp-head { padding: 8px 12px; gap: 10px; padding-top: calc(8px + env(safe-area-inset-top)); }
+  .mp-head p { display: none; }
+  .mp-timer { flex-direction: column; align-items: flex-end; gap: 0; padding: 4px 10px; }
+  .mp-body { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 40%); }
+  .mp-vote { padding: 10px; }
+  .vote-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .vote-card { height: 52px; }
+  .vc-main { gap: 6px; padding: 0 8px; }
+  .vc-name b { font-size: 14px; }
+  .vc-name small { font-size: 10px; }
+  .vc-actions { padding-right: 6px; gap: 4px; }
+  .vc-actions button { width: 32px; height: 32px; }
+  .mp-foot { padding-top: 8px; font-size: 12px; }
+  .mp-chat { border-left: 0; border-top: 1px solid var(--line-100); padding-bottom: env(safe-area-inset-bottom); }
+  .mp-chat h2 { padding: 8px 14px; font-size: 14px; }
+  .chat-log { padding: 8px 12px; gap: 6px; }
+
+  /* ---------- Full-screen moments ---------- */
+  .reveal figure .robot { max-width: 24vw; }
+  .reveal-stage { gap: 10px; flex-wrap: wrap; padding: 0 12px; bottom: 90px; }
+  .sr-row { gap: 24px; }
+  .elim-killer { left: 4%; max-height: 30vh; }
+  .elim-body { right: 4%; max-height: 20vh; }
+  .over { justify-content: flex-start; padding: calc(24px + env(safe-area-inset-top)) 0 calc(16px + env(safe-area-inset-bottom)); overflow-y: auto; }
+  .over-lineup .robot { width: 15vw !important; max-width: 64px; height: auto !important; }
+  .over-stats { flex-wrap: wrap; justify-content: center; padding: 0 12px; gap: 8px; }
+  .over-stats div { min-width: 28vw; padding: 8px 12px; }
+  .over-actions { padding: 0 16px; width: 100%; }
+  .over-actions .ui-btn { flex: 1; }
+  .kill-band { height: 130px; }
+  .kill-band .robot { width: 64px !important; height: auto !important; }
+  .kill-killer { left: calc(50% - 90px); } .kill-victim { left: calc(50% + 20px); }
+  .kill-slash { left: calc(50% + 10px); width: 110px; } .kill-splat { left: calc(50% + 10px); width: 110px; }
+}
+
+/* Landscape phones (the way the game is played). */
+@media (orientation: landscape) and (max-height: 520px) {
+  .game .rotate-hint { display: none; }
+  /* ---------- In-game HUD: smaller and see-through so the map stays the star ---------- */
+  .game.touch .hud-left { width: min(190px, 27vw); gap: 6px; left: max(10px, env(safe-area-inset-left)); }
+  .game.touch .hud-left .ui-panel { padding: 6px 9px; background: rgba(15,22,48,.78); border-width: 1.5px; border-radius: 12px; }
+  .hud-team header { margin-bottom: 4px; } .hud-team .type-label { font-size: 10px; } .hud-team .pct { font-size: 13px; }
+  .hud-bar { height: 10px; border-radius: 5px; } .hud-bar > div { border-radius: 5px; }
+  .hud-tasks .ui-panel-title { font-size: 11px; line-height: 14px; margin-bottom: 4px; }
+  .hud-tasks ul { gap: 4px; } .hud-tasks li { gap: 7px; } .hud-tasks li i { width: 7px; height: 7px; margin-top: 5px; }
+  .hud-tasks li b { font-size: 12px; } .hud-tasks li small { display: none; }
+  .imp-line { font-size: 10px; margin: 0 0 4px; }
+  .game.touch .hud-icon { width: 40px; height: 40px; border-radius: 12px; }
+  .game.touch .hud-icon .ui-icon { width: 22px; height: 22px; }
+  .game.touch .hud-top-right { top: 10px; right: max(10px, env(safe-area-inset-right)); }
+  .game.touch .hud-act { width: 66px; height: 66px; border-radius: 14px; font-size: 12px; border-width: 2px; }
+  .game.touch .hud-act.main { width: 84px; height: 84px; font-size: 14px; }
+  .game.touch .hud-act small { font-size: 9px; min-height: 10px; }
+  .game.touch .hud-dock { right: max(12px, env(safe-area-inset-right)); bottom: 12px; gap: 8px; }
+  .game.touch .hud-room { left: max(10px, env(safe-area-inset-left)); bottom: 10px; font-size: 12px; padding: 4px 10px; border-width: 1.5px; border-radius: 10px; }
+  .game.touch .alert-banner { top: 8px; padding: 6px 12px; border-radius: 12px; }
+  .game.touch .alert-banner h2 { font-size: 16px; } .game.touch .alert-banner p { display: none; } .game.touch .alert-banner .timer b { font-size: 24px; }
+  .game.touch .alert-banner .kicker { font-size: 10px; letter-spacing: .16em; }
+  .game.touch .alert-banner.small h2 { font-size: 16px; }
+  .game.touch .emergency-task { padding: 6px 10px; width: min(190px, 27vw); }
+  .game.touch .emergency-task h3 { font-size: 11px; margin-bottom: 3px; } .game.touch .emergency-task b { font-size: 13px; } .game.touch .emergency-task small { font-size: 11px; }
+  .toast { bottom: 100px; padding: 6px 14px; font-size: 13px; border-radius: 10px; }
+  .toast.vent { top: 60px; }
+  .ghost-banner { padding: 4px 14px; top: 8px; } .ghost-banner h2 { font-size: 14px; } .ghost-banner p { font-size: 11px; }
+  .hud-room.ghost { font-size: 12px; }
+  .ghost-chat { top: 58px; width: min(260px, 36vw); }
+  .ui-modal { padding: 16px 18px; border-radius: 18px; } .ui-modal h2 { font-size: 22px; }
+  .sab-types { margin-top: 10px; } .sab-doors-label { margin: 12px 0 6px; }
+  .rules-list { margin: 8px 0; } .rules-list div { padding: 5px 0; } .rules-list dt, .rules-list dd { font-size: 13px; }
+  .map-screen h1 { font-size: 20px; } .map-screen > header { margin-bottom: 6px; } .map-close { width: 40px; height: 40px; }
+  .map-tasks li { padding: 3px 0; font-size: 12px; }
+
+  /* ---------- Full-screen moments: sized by screen height, not width ---------- */
+  .reveal { padding-top: 8px; }
+  .reveal-kicker { font-size: 10px; letter-spacing: .4em; margin-bottom: 0; }
+  .reveal h1 { font-size: clamp(34px, 18vh, 84px); }
+  .reveal-sub { margin-top: 2px; font-size: 12px; }
+  .reveal-stage { bottom: 46px; gap: 14px; }
+  .reveal figure .robot { max-width: none; width: auto !important; height: 34vh !important; max-height: 150px; }
+  .reveal figure.you .robot { height: 42vh !important; max-height: 180px; }
+  .reveal figcaption { font-size: 11px; }
+  .reveal-platform { height: 70px; bottom: -14px; }
+  .reveal-pill { bottom: 8px; padding: 3px 14px 3px 5px; font-size: 11px; } .reveal-pill i { width: 26px; height: 26px; font-size: 13px; }
+  .splash-report { gap: 6px; }
+  .splash-report h1 { font-size: clamp(30px, 14vh, 72px); white-space: nowrap; }
+  .sr-pill { padding: 4px 18px; font-size: 10px; letter-spacing: .3em; }
+  .sr-row { gap: 28px; } .sr-row .robot { max-height: 22vh; }
+  .sr-horn { width: 52px; height: 52px; } .sr-horn .ui-icon { width: 30px; height: 30px; }
+  .sr-button { width: 64px; height: 64px; box-shadow: 0 0 0 6px #1B1018, 0 0 28px rgba(255,61,90,.7); }
+  .sr-row figure { font-size: 12px; gap: 4px; }
+  .sr-line { font-size: 13px; } .sr-count { padding: 7px 24px; font-size: 13px; }
+  .elim h1 { font-size: clamp(30px, 14vh, 70px); white-space: nowrap; text-shadow: 0 4px 0 #5A0A18; }
+  .elim { padding-top: 8px; } .elim-sub { font-size: 12px; margin-top: 2px; } .elim-note { font-size: 11px; margin-bottom: 6px; }
+  .elim-btn { margin-bottom: 10px; min-height: 44px; }
+  .eject-text h1 { font-size: clamp(22px, 9vh, 48px); } .eject-text h2 { font-size: 14px; } .eject-text p { font-size: 14px; margin-top: 4px; }
+  .tally { margin-top: 6px; font-size: 11px; gap: 1px; }
+  .kill-text { font-size: 22px; margin-top: 12px; }
+
+  /* Pause: keyboard controls mean nothing on a phone, and the rest has to fit without scrolling. */
+  .ui-modal:has(.pause) { width: min(720px, 100%); }
+  .pause { width: 100%; gap: 10px 14px; grid-template-columns: 1fr 1fr; grid-template-areas: "head head" "resume sound" "actions sound" "ctrl ctrl"; align-items: start; }
+  .pause > :nth-child(1) { grid-area: head; } .pause > :nth-child(2) { grid-area: resume; } .pause > :nth-child(3) { grid-area: sound; }
+  .pause > :nth-child(4) { grid-area: ctrl; } .pause > :nth-child(5) { grid-area: actions; grid-template-columns: 1fr; }
+  .pause .ui-btn.xl { min-height: 52px; font-size: 20px; }
+  .pause-box { padding: 10px 14px; gap: 6px; }
+  .ui-modal:has(.pause-box) { padding: 14px 18px; }
+  @media (pointer: coarse) { .pause-box:has(.controls-grid) { display: none; } }
+  /* Game over: header, line-up, stats and buttons all have to fit on one short screen. */
+  .over { justify-content: flex-start; gap: 4px; padding-top: 10px; overflow-y: auto; }
+  .over h1 { font-size: 38px; text-shadow: 0 4px 0 #0F5B70; } .over.imp h1 { text-shadow: 0 4px 0 #5A0A18; }
+  .over-lineup { margin-top: 0; gap: 10px; } .over-lineup li { gap: 3px; }
+  .over-stats { margin-top: 2px; gap: 8px; } .over-stats div { padding: 6px 12px; min-width: 120px; } .over-stats b { font-size: 20px; }
+  .over-actions { margin-top: 6px; padding-bottom: 10px; gap: 12px; } .over-actions .ui-btn { min-height: 44px; }
+}
+@media (orientation: portrait) and (pointer: coarse) { .game .rotate-hint { display: flex; } }
+
+/* Landscape phones: respect the notch / rounded corners. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .game.touch .hud-left { left: calc(10px + env(safe-area-inset-left)); }
+  .game.touch .hud-dock, .game.touch .hud-top-right { right: calc(10px + env(safe-area-inset-right)); }
+}

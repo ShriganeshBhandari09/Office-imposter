@@ -2,8 +2,8 @@
 // each bot looks at the world the way a player would (vision + walls), picks a goal
 // and walks there along a path, then calls the same Game methods a human's socket would.
 import {
-  WORLD, PLAYER_R, SPEED, SABOTAGE_FIX, VENTS, ROOMS, WALLS, DOORS, VISION,
-  KILL_RANGE, REPORT_RANGE, USE_RANGE, TASKS, obstaclesFor, collides, dist, roomAt,
+  WORLD, LOBBY, PLAYER_R, SPEED, SABOTAGE_FIX, VENTS, ROOMS, OPAQUE_WALLS, DOORS, VISION,
+  KILL_RANGE, KILL_DISTANCE, REPORT_RANGE, USE_RANGE, TASKS, obstaclesFor, collides, dist, roomAt,
 } from '../client/src/shared/map.js';
 
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -22,20 +22,20 @@ export function botName(taken) {
 
 // ---------- Path finding on a coarse grid ----------
 
-const CELL = 10;
+const CELL = 5;
 const GW = Math.ceil(WORLD.w / CELL), GH = Math.ceil(WORLD.h / CELL);
 const STATIC = obstaclesFor([]);
 const OPEN = new Uint8Array(GW * GH);
 for (let gy = 0; gy < GH; gy++) {
   for (let gx = 0; gx < GW; gx++) {
-    OPEN[gy * GW + gx] = collides(gx * CELL + CELL / 2, gy * CELL + CELL / 2, STATIC, PLAYER_R + 2) ? 0 : 1;
+    OPEN[gy * GW + gx] = collides(gx * CELL + CELL / 2, gy * CELL + CELL / 2, STATIC, PLAYER_R + 1) ? 0 : 1;
   }
 }
 const center = (i) => ({ x: (i % GW) * CELL + CELL / 2, y: Math.floor(i / GW) * CELL + CELL / 2 });
 
 function nearestOpen(x, y) {
   const cx = clamp(Math.floor(x / CELL), 0, GW - 1), cy = clamp(Math.floor(y / CELL), 0, GH - 1);
-  for (let r = 0; r < 20; r++) {
+  for (let r = 0; r < 40; r++) {
     let best = -1, bd = Infinity;
     for (let gy = cy - r; gy <= cy + r; gy++) {
       for (let gx = cx - r; gx <= cx + r; gx++) {
@@ -132,6 +132,8 @@ const lockedDoors = (game) => {
   const locked = new Set(game.lockedRooms());
   return DOORS.filter((d) => locked.has(d.roomId));
 };
+// What blocks a bot's line of sight: solid walls (glass doesn't) and locked doors.
+const sightBlockers = (game) => [...OPAQUE_WALLS, ...lockedDoors(game)];
 
 // Straight line from a to b doesn't cross a wall or locked door (Liang-Barsky).
 function lineOfSight(a, b, occluders) {
@@ -150,22 +152,34 @@ function lineOfSight(a, b, occluders) {
 
 function visionOf(game, p) {
   const s = game.settings;
-  if (p.role === 'impostor') return VISION.impostor * s.impostorVision / 100;
-  return (game.sabotage?.type === 'lights' ? VISION.lightsOut : VISION.crew) * s.crewVision / 100;
+  if (p.role === 'impostor') return VISION.base * s.impostorVision;
+  return (game.sabotage?.type === 'lights' ? VISION.lightsOut : VISION.base) * s.crewVision;
 }
 
 // Can player `a` see point/player `b` right now?
-function canSee(game, a, b, occ = [...WALLS, ...lockedDoors(game)]) {
+function canSee(game, a, b, occ = sightBlockers(game)) {
   if (!a.alive || a.inVent || b.inVent) return false;
   return dist(a, b) <= visionOf(game, a) && lineOfSight(a, b, occ);
 }
 
 // ---------- Brain ----------
 
-function newBrain(p, t) {
+// Bots remember the last 3 games in this room: whoever was an impostor before starts the next game slightly suspect
+// (the latest game counts most). It is only a nudge; anything a bot actually sees outweighs it.
+function memorySuspicion(game, p) {
+  const sus = {};
+  const hist = game?.history || [];
+  hist.forEach((h, i) => {
+    const weight = 0.5 * (i + 1); // oldest 0.5, then 1, then 1.5
+    for (const id of h.impostors) if (id !== p.id) sus[id] = (sus[id] || 0) + weight;
+  });
+  return sus;
+}
+
+function newBrain(p, t, game) {
   return {
     path: null, goal: null, act: null, lastTp: p.tpSeq, blockedSince: 0,
-    sus: {}, seen: {}, witness: null, found: null, fakeDone: new Set(),
+    sus: memorySuspicion(game, p), seen: {}, witness: null, found: null, fakeDone: new Set(),
     fixId: null, sabSeenAt: 0, sabAt: t + rand(20000, 45000), fleeUntil: 0,
     meet: null,
   };
@@ -191,7 +205,7 @@ const stop = (b) => { b.goal = null; b.path = null; };
 
 function walk(game, p, b, dt, t) {
   if (!b.path || !b.path.length) { p.moving = false; return; }
-  let left = SPEED * 0.9 * dt;
+  let left = SPEED * game.settings.playerSpeed * 0.9 * dt;
   const doors = p.alive ? lockedDoors(game).filter((d) => !collides(p.x, p.y, [d])) : [];
   while (left > 0 && b.path.length) {
     const w = b.path[0];
@@ -216,17 +230,24 @@ function walk(game, p, b, dt, t) {
 }
 
 // Somewhere to go when there is nothing else to do: a random room or task spot.
-function wanderTarget() {
-  if (Math.random() < 0.5) { const r = pick(ROOMS); return { x: r.x + r.w / 2, y: r.y + r.h / 2 }; }
-  return pick(TASKS);
+function wanderTarget(from) {
+  const one = () => {
+    if (Math.random() < 0.5) { const r = pick(ROOMS); return { x: r.x + r.w / 2, y: r.y + r.h / 2 }; }
+    return pick(TASKS);
+  };
+  // Prefer a spot well away from where the bot stands, so it keeps crossing the office instead of shuffling about.
+  let best = one();
+  if (from) for (let i = 0; i < 3; i++) { const c = one(); if (dist(from, c) > dist(from, best)) best = c; }
+  return best;
 }
 
 function doTaskLoop(game, p, b, t, fake) {
   const todo = p.tasks.filter((tk) => !tk.done && !(fake && b.fakeDone.has(tk.id)));
   if (!todo.length) {
     if (!b.goal || arrived(p, b)) {
-      if (b.goal?.kind === 'wander') { stop(b); b.act = { kind: 'idle', until: t + rand(1500, 5000) }; return; }
-      const w = wanderTarget();
+      // With nothing left to do a bot keeps patrolling; only now and then does it stop for a moment.
+      if (b.goal?.kind === 'wander' && Math.random() < 0.25) { stop(b); b.act = { kind: 'idle', until: t + rand(400, 1400) }; return; }
+      const w = wanderTarget(p);
       goTo(p, b, w.x, w.y, 'wander', `${w.x},${w.y}`, 40, 0, t);
     }
     return;
@@ -264,7 +285,7 @@ function finishAct(game, p, b, t) {
 
 // Crewmates (and ghosts) on the map.
 function crewThink(game, p, b, t) {
-  const occ = [...WALLS, ...lockedDoors(game)];
+  const occ = sightBlockers(game);
   if (p.alive) {
     // Remember where everyone in view was, for "I saw X near there" later.
     if (t >= (b.lookAt || 0)) {
@@ -303,7 +324,8 @@ function crewThink(game, p, b, t) {
       } else {
         // Some bots go; if nobody else has, this one does.
         const someone = [...game.players.values()].some((q) => q.bot && q.id !== p.id && q.brain?.fixId);
-        b.fixId = !someone || Math.random() < 0.5 ? spots[0]?.id : null;
+        // The network sabotage ends the game on a timer, so most bots rush it; lights are less urgent.
+        b.fixId = !someone || Math.random() < (sab.type === 'comms' ? 0.8 : 0.5) ? spots[0]?.id : null;
       }
       if (b.fixId) b.act = null;
     }
@@ -337,7 +359,7 @@ function impostorThink(game, p, b, t) {
   if (!p.alive) { if (!b.act) doTaskLoop(game, p, b, t, true); return; }
   if (p.inVent) return;
 
-  const occ = [...WALLS, ...lockedDoors(game)];
+  const occ = sightBlockers(game);
   const others = [...game.players.values()].filter((q) => q.alive && q.role !== 'impostor' && !q.inVent);
   if (p.killCdUntil <= t && t >= b.fleeUntil) {
     const targets = others.filter((q) => canSee(game, p, q, occ)).sort((a, c) => dist(p, a) - dist(p, c));
@@ -345,7 +367,7 @@ function impostorThink(game, p, b, t) {
       // Never kill in front of a witness.
       const seen = others.some((q) => q.id !== v.id && (canSee(game, q, p, occ) || canSee(game, q, v, occ)));
       if (seen) continue;
-      if (dist(p, v) <= KILL_RANGE * 0.85) {
+      if (dist(p, v) <= KILL_RANGE * KILL_DISTANCE[game.settings.killDistance] * 0.85) {
         game.kill(p.id, v.id);
         b.act = null;
         b.fleeUntil = t + 8000;
@@ -357,7 +379,7 @@ function impostorThink(game, p, b, t) {
       }
       if (dist(p, v) < 260) {
         b.act = null;
-        goTo(p, b, v.x, v.y, 'hunt', v.id, KILL_RANGE * 0.6, 500, t);
+        goTo(p, b, v.x, v.y, 'hunt', v.id, KILL_RANGE * KILL_DISTANCE[game.settings.killDistance] * 0.6, 500, t);
         return;
       }
     }
@@ -384,7 +406,8 @@ const say = (b, text, at) => b.meet.lines.push({ text, at });
 function planMeeting(game, p, b, t, caller, body) {
   const m = game.meeting;
   const ends = m.endsAt;
-  b.meet = { lines: [], voteAt: Math.min(ends - 3000, t + rand(8000, 25000)), voted: false, defended: false, accusedBy: null };
+  // Bots vote some time after voting opens, never in the last few seconds.
+  b.meet = { lines: [], voteAt: Math.min(ends - 3000, Math.max(t, m.discussEndsAt) + rand(4000, 18000)), voted: false, defended: false, accusedBy: null };
   if (!p.alive) return;
   // Bots that didn't personally spot the body still know who they saw nearby recently;
   // without this, only the reporter ever gains suspicion and everyone else defaults to skip.
@@ -459,10 +482,32 @@ function meetingThink(game, p, b, t) {
 
 // ---------- Hooks called by Game ----------
 
+// In the lobby bots amble around the reception room and now and then say something.
+const LOBBY_LINES = ["who's hosting today?", 'ready when you are', 'this chai is cold', 'anyone up for table tennis?',
+  'I call dibs on the Den', 'is the Wi-Fi okay?', "let's go!", 'I was never the impostor. Never.'];
+function lobbyThink(game, p, b, t, dt) {
+  const L = b.lobby || (b.lobby = { tx: p.x, ty: p.y, until: 0, sayAt: t + rand(8000, 30000) });
+  if (t >= L.until) {
+    L.until = t + rand(2500, 8000);
+    const idle = Math.random() < 0.35;
+    L.tx = idle ? p.x : rand(60, LOBBY.w - 60);
+    L.ty = idle ? p.y : rand(LOBBY.panels[0].y + LOBBY.panels[0].h + 40, LOBBY.h - 50);
+  }
+  const d = Math.hypot(L.tx - p.x, L.ty - p.y);
+  if (d > 6) {
+    const step = Math.min(d, 85 * dt);
+    p.x += ((L.tx - p.x) / d) * step; p.y += ((L.ty - p.y) / d) * step;
+    if (Math.abs(L.tx - p.x) > 1) p.facing = L.tx > p.x ? 1 : -1;
+    p.moving = true; p.lastMoveAt = t;
+  } else p.moving = false;
+  if (t >= L.sayAt) { L.sayAt = t + rand(25000, 70000); game.chat(p.id, pick(LOBBY_LINES)); }
+}
+
 export function botsTick(game, t, dt) {
   for (const p of game.players.values()) {
     if (!p.bot) continue;
-    const b = p.brain || (p.brain = newBrain(p, t));
+    const b = p.brain || (p.brain = newBrain(p, t, game));
+    if (game.phase === 'lobby') { lobbyThink(game, p, b, t, dt); continue; }
     if (game.phase === 'meeting') { meetingThink(game, p, b, t); continue; }
     if (game.phase !== 'playing' || game.endAt || game.roleRevealUntil > t) { p.moving = false; continue; }
     if (b.lastTp !== p.tpSeq) { b.lastTp = p.tpSeq; if (!p.inVent) { b.path = null; b.goal = b.goal?.kind === 'vent' ? null : b.goal; } }
@@ -476,7 +521,7 @@ export function botsTick(game, t, dt) {
 
 // Crew bots that can see the killer remember it.
 export function botsSawKill(game, killer, victim) {
-  const occ = [...WALLS, ...lockedDoors(game)];
+  const occ = sightBlockers(game);
   for (const p of game.players.values()) {
     if (!p.bot || !p.alive || p.role === 'impostor' || p.id === victim.id) continue;
     if (!p.brain) continue;
@@ -491,7 +536,7 @@ export function botsMeetingStarted(game, caller, body) {
   const t = Date.now();
   for (const p of game.players.values()) {
     if (!p.bot) continue;
-    const b = p.brain || (p.brain = newBrain(p, t));
+    const b = p.brain || (p.brain = newBrain(p, t, game));
     stop(b); b.act = null; b.fixId = null;
     planMeeting(game, p, b, t, caller, body);
   }

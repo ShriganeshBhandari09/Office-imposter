@@ -37,3 +37,25 @@ export function savedRoom() {
 export function saveRoom(code) {
   try { if (code) storage()?.setItem('oi_room', code); else storage()?.removeItem('oi_room'); } catch { /* ignore */ }
 }
+
+// The look this device last picked, so the next game starts with it.
+export function savedLook() {
+  try {
+    const l = JSON.parse(storage()?.getItem('oi_look') || '{}');
+    return { color: typeof l.color === 'string' ? l.color : '', hat: typeof l.hat === 'string' ? l.hat : 'none' };
+  } catch { return { color: '', hat: 'none' }; }
+}
+export function saveLook(look) {
+  try { storage()?.setItem('oi_look', JSON.stringify(look)); } catch { /* ignore */ }
+}
+
+// Sound levels (0-100) for the pause menu.
+export function savedSound() {
+  try {
+    const s = JSON.parse(storage()?.getItem('oi_sound') || '{}');
+    return { master: 80, music: 45, effects: 70, ...s };
+  } catch { return { master: 80, music: 45, effects: 70 }; }
+}
+export function saveSound(s) {
+  try { storage()?.setItem('oi_sound', JSON.stringify(s)); } catch { /* ignore */ }
+}

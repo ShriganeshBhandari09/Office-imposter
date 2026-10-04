@@ -1,187 +1,109 @@
 import {
-  WORLD, ROOMS, DESKS, TABLES, WALLS, DOORS, VENTS, WORKSPACE_FLOOR,
-  EMERGENCY_BUTTON, CAMERA_CONSOLE, TASKS, SABOTAGE_FIX, COLORS, CAMERAS,
+  WORLD, ROOMS, DOORS, OPAQUE_WALLS, VENTS, TASKS, SABOTAGE_FIX, CAMERAS,
 } from './shared/map.js';
-import { sprite, SPRITE_W, SPRITE_H } from './sprites.js';
+import { mapImage, mapIsReady } from './assets.js';
+import { drawObjects, drawHighlights } from './taskIcons.js';
+import { robotImage, isReady, colorHex, EYE_IMPOSTOR, ROBOT_ASPECT, BODY_ASPECT } from './robot.js';
 
-export const colorHex = (id) => COLORS.find((c) => c.id === id)?.hex || '#ccc';
+export { colorHex };
 
-function shadeHex(hex, amt) {
-  const n = parseInt(hex.slice(1), 16);
-  const f = (c) => Math.max(0, Math.min(255, Math.round(c * amt)));
-  return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`;
-}
+const FONT = '"Chakra Petch", system-ui, sans-serif';
+const BODY_W = 40; // robot width in world units (height is 1.28x)
 
-function checker(g, x, y, w, h, base, tile = 32) {
-  g.fillStyle = base;
-  g.fillRect(x, y, w, h);
-  g.fillStyle = shadeHex(base, 0.92);
-  for (let ty = y; ty < y + h; ty += tile) {
-    for (let tx = x; tx < x + w; tx += tile) {
-      if (((tx / tile) + (ty / tile)) % 2 === 0) {
-        g.fillRect(tx, ty, Math.min(tile, x + w - tx), Math.min(tile, y + h - ty));
-      }
-    }
-  }
-}
-
-function monitor(g, x, y) {
-  g.fillStyle = '#1f2328'; g.fillRect(x, y, 26, 18);
-  g.fillStyle = '#4fc3f7'; g.fillRect(x + 3, y + 3, 20, 12);
-  g.fillStyle = '#1f2328'; g.fillRect(x + 11, y + 18, 4, 5);
-}
-
-function chair(g, x, y) {
-  g.fillStyle = '#263238'; g.fillRect(x, y, 22, 18);
-  g.fillStyle = '#37474f'; g.fillRect(x + 3, y + 3, 16, 12);
-}
-
-let staticLayer = null;
 let fogLayer = null;
 
-// Everything that never changes is drawn once into an offscreen canvas.
-function buildStatic() {
-  const c = document.createElement('canvas');
-  c.width = WORLD.w; c.height = WORLD.h;
-  const g = c.getContext('2d');
-  g.imageSmoothingEnabled = false;
-
-  checker(g, 0, 0, WORLD.w, WORLD.h, WORKSPACE_FLOOR);
-  for (const r of ROOMS) checker(g, r.x, r.y, r.w, r.h, r.floor, 24);
-
-  // Desks with monitors and chairs. Desk sizes vary a lot on this map, so the layout adapts
-  // to each desk's width (how many monitor columns fit) and height (one row or two).
-  for (const d of DESKS) {
-    g.fillStyle = '#6d4c41'; g.fillRect(d.x, d.y, d.w, d.h);
-    g.fillStyle = '#8d6e63'; g.fillRect(d.x + 4, d.y + 4, d.w - 8, d.h - 8);
-    const cols = Math.max(1, Math.floor((d.w - 20) / 62));
-    const twoRows = d.h >= 70;
-    for (let i = 0; i < cols; i++) {
-      const mx = d.x + 22 + i * 62;
-      if (mx + 26 > d.x + d.w - 4) break;
-      if (twoRows) { monitor(g, mx, d.y + 12); monitor(g, mx, d.y + 52); }
-      else monitor(g, mx, d.y + d.h / 2 - 9);
-      chair(g, mx + 2, d.y - 22);
-      chair(g, mx + 2, d.y + d.h + 4);
-    }
-    g.fillStyle = 'rgba(0,0,0,0.35)'; g.font = '14px VT323, monospace';
-    g.fillText(d.name, d.x + d.w - 46, d.y + d.h - 6);
+// The floor plan art, with a dark void behind it until it has loaded.
+function drawFloor(g) {
+  g.fillStyle = '#03050C';
+  g.fillRect(0, 0, WORLD.w, WORLD.h);
+  if (mapIsReady()) {
+    g.imageSmoothingEnabled = true;
+    g.imageSmoothingQuality = 'high';
+    g.drawImage(mapImage(), 0, 0, WORLD.w, WORLD.h);
+    drawObjects(g); // the task and sabotage objects, which the clean art leaves out
   }
-  for (const t of TABLES) {
-    g.fillStyle = shadeHex(t.color, 0.8); g.fillRect(t.x, t.y, t.w, t.h);
-    g.fillStyle = t.color; g.fillRect(t.x + 4, t.y + 4, t.w - 8, t.h - 8);
-  }
-  // Emergency button in the Lobby.
-  g.fillStyle = '#555'; g.beginPath(); g.arc(EMERGENCY_BUTTON.x, EMERGENCY_BUTTON.y, 14, 0, 7); g.fill();
-  g.fillStyle = '#e53935'; g.beginPath(); g.arc(EMERGENCY_BUTTON.x, EMERGENCY_BUTTON.y, 10, 0, 7); g.fill();
+}
 
-  // Props next to task spots so each one reads as a real thing.
-  const prop = (x, y, w, h, a, b) => { g.fillStyle = a; g.fillRect(x, y, w, h); if (b) { g.fillStyle = b; g.fillRect(x + 3, y + 3, w - 6, h - 6); } };
-  prop(30, 150, 52, 22, '#455a64', '#90a4ae');      // Cafeteria chai counter
-  prop(270, 15, 50, 40, '#263238', '#37474f');      // Spark server rack
-  prop(355, 15, 30, 30, '#212121', '#424242');      // Hive shredder
-  prop(395, 60, 40, 24, '#212121', '#4fc3f7');      // Hive manager PC
-  prop(20, 380, 50, 30, '#5d4037', '#8d6e63');      // Toilets supply shelf
-  prop(190, 460, 40, 40, '#455a64', '#607d8b');     // Pixel filing cabinet
-  prop(250, 500, 60, 40, '#5d4037', '#8d6e63');     // Den desk
-  prop(390, 510, 26, 26, '#6d4c41', '#2e7d32');     // Den plant
-  prop(860, 300, 60, 30, '#455a64', '#90a4ae');     // Lobby reception desk
-  prop(610, 280, 16, 30, '#263238', '#00e676');     // Lobby router (comms fix)
-  prop(630, 398, 90, 14, '#eceff1', '#ffffff');     // Conference whiteboard
-  prop(720, 500, 70, 14, '#212121', '#424242');     // Conference projector screen
-  prop(800, 450, 60, 40, '#212121', '#1b5e20');     // Security camera console
-  prop(860, 410, 40, 20, '#212121', '#424242');     // Security ID reader
-  prop(940, 400, 40, 20, '#263238', '#29b6f6');     // Wi-Fi panel (Security)
-  prop(898, 715, 40, 20, '#263238', '#29b6f6');     // Wi-Fi panel (Call 3)
-  prop(950, 515, 30, 16, '#37474f', '#263238');     // Call 1 phone
-  prop(950, 670, 30, 14, '#37474f', '#263238');     // Call 2 headset stand
-  prop(950, 720, 30, 16, '#263238', '#455a64');     // Call 3 laptop
-  prop(130, 260, 40, 20, '#fbc02d', '#212121');     // Toilets power panel (lights fix)
-
-  // Vents.
+// Vents are dark grilles set into the floor.
+function drawVents(g) {
   for (const v of VENTS) {
-    g.fillStyle = '#263238'; g.fillRect(v.x - 16, v.y - 11, 32, 22);
-    g.fillStyle = '#546e7a';
-    for (let i = 0; i < 4; i++) g.fillRect(v.x - 13, v.y - 8 + i * 5, 26, 2);
+    g.fillStyle = '#0C0F13';
+    g.beginPath(); g.roundRect(v.x - 13, v.y - 9, 26, 18, 3); g.fill();
+    g.strokeStyle = '#2A313B'; g.lineWidth = 1;
+    g.beginPath();
+    for (let y = v.y - 6; y <= v.y + 6; y += 4) { g.moveTo(v.x - 11, y); g.lineTo(v.x + 11, y); }
+    g.stroke();
   }
-
-  // Walls with a lighter top edge for a bit of depth.
-  for (const w of WALLS) {
-    g.fillStyle = '#1c1f24'; g.fillRect(w.x, w.y, w.w, w.h);
-    g.fillStyle = '#39404a'; g.fillRect(w.x, w.y, w.w, Math.min(4, w.h));
-  }
-  g.strokeStyle = '#1c1f24'; g.lineWidth = 8; g.strokeRect(4, 4, WORLD.w - 8, WORLD.h - 8);
-
-  // Room labels.
-  g.font = '12px "Press Start 2P", monospace';
-  g.textAlign = 'center';
-  for (const r of ROOMS) {
-    g.fillStyle = 'rgba(0,0,0,0.28)';
-    const small = r.w < 130;
-    g.font = small ? '8px "Press Start 2P", monospace' : '12px "Press Start 2P", monospace';
-    g.fillText(r.name, r.x + r.w / 2, r.y + r.h / 2 + (small ? 16 : 30));
-  }
-  g.fillStyle = 'rgba(0,0,0,0.25)';
-  g.font = '14px "Press Start 2P", monospace';
-  g.fillText('Workspace', 720, 35);
-  g.fillText('Workspace', 660, 900);
-  g.fillText('Workspace', 220, 900);
-  g.textAlign = 'left';
-  return c;
 }
 
-export function invalidateStatic() { staticLayer = null; }
-
+// A glowing ring on an object that needs doing: yellow for your own task, red for a live sabotage.
 function drawMarker(g, x, y, color, t) {
-  const bob = Math.sin(t / 250) * 4;
-  g.fillStyle = color;
-  g.font = '16px "Press Start 2P", monospace';
-  g.textAlign = 'center';
-  g.fillText('!', x, y - 26 + bob);
-  g.globalAlpha = 0.25 + 0.15 * Math.sin(t / 250);
-  g.beginPath(); g.arc(x, y, 22, 0, 7); g.fill();
-  g.globalAlpha = 1;
-  g.textAlign = 'left';
+  const pulse = 0.5 + 0.5 * Math.sin(t / 280);
+  g.save();
+  g.shadowColor = color; g.shadowBlur = 14 + 8 * pulse;
+  g.strokeStyle = color; g.lineWidth = 2.5; g.globalAlpha = 0.75 + 0.25 * pulse;
+  g.beginPath(); g.arc(x, y, 19 + 2 * pulse, 0, 7); g.stroke();
+  g.restore();
 }
 
-export function drawCharacter(g, x, y, hex, { frame = 0, facing = 1, name, ghost = false, highlight = null } = {}) {
-  const img = sprite(hex, frame, facing);
+// "Visual task" effect: a green ring and rising sparks around a crewmate who just finished a task.
+function drawTaskFx(g, x, y, t) {
+  const pulse = 0.5 + 0.5 * Math.sin(t / 160);
   g.save();
-  if (ghost) g.globalAlpha = 0.45;
-  g.fillStyle = 'rgba(0,0,0,0.3)';
-  g.beginPath(); g.ellipse(x, y + SPRITE_H / 2 - 2, 14, 5, 0, 0, 7); g.fill();
-  if (highlight) {
-    g.strokeStyle = highlight; g.lineWidth = 3;
-    g.strokeRect(x - SPRITE_W / 2 - 3, y - SPRITE_H / 2 - 3, SPRITE_W + 6, SPRITE_H + 6);
-  }
-  g.drawImage(img, Math.round(x - SPRITE_W / 2), Math.round(y - SPRITE_H / 2));
-  if (name) {
-    g.font = '18px VT323, monospace';
-    g.textAlign = 'center';
-    g.fillStyle = 'rgba(0,0,0,0.6)';
-    g.fillText(name, x + 1, y - SPRITE_H / 2 - 5);
-    g.fillStyle = '#fff';
-    g.fillText(name, x, y - SPRITE_H / 2 - 6);
-    g.textAlign = 'left';
+  g.shadowColor = '#3FE07A'; g.shadowBlur = 12 + 8 * pulse;
+  g.strokeStyle = '#3FE07A'; g.lineWidth = 2.5; g.globalAlpha = 0.7 + 0.3 * pulse;
+  g.beginPath(); g.ellipse(x, y, 24 + 3 * pulse, 9 + pulse, 0, 0, 7); g.stroke();
+  g.fillStyle = '#B6FFCF'; g.shadowBlur = 6;
+  for (let i = 0; i < 5; i++) {
+    const ph = ((t / 700) + i / 5) % 1;
+    const a = i * 1.9 + t / 900;
+    g.globalAlpha = 1 - ph;
+    g.beginPath(); g.arc(x + Math.cos(a) * 18, y - 6 - ph * 44, 2.4, 0, 7); g.fill();
   }
   g.restore();
+}
+
+function drawNameTag(g, text, x, y, color) {
+  g.font = `700 12px ${FONT}`;
+  g.textAlign = 'center';
+  const w = g.measureText(text).width + 14;
+  g.fillStyle = 'rgba(3,5,12,.7)';
+  g.beginPath(); g.roundRect(x - w / 2, y - 12, w, 17, 8); g.fill();
+  g.fillStyle = color;
+  g.fillText(text, x, y + 1);
+  g.textAlign = 'left';
+}
+
+// Draws a robot standing at (x, y), its feet on y.
+export function drawRobot(g, x, y, { hex, hat, facing = 1, frame = 0, ghost = false, name, nameColor = '#EAF0FF', eyes, highlight = null, moving = false, t = 0, size = BODY_W }) {
+  const img = robotImage({ hex, hat, state: ghost ? 'ghost' : 'alive', eyes, facing, frame });
+  const w = size, h = size * ROBOT_ASPECT;
+  const bob = moving ? Math.abs(Math.sin(t / 110)) * -2 : 0;
+  if (!ghost) {
+    g.fillStyle = 'rgba(0,0,0,.32)';
+    g.beginPath(); g.ellipse(x, y + 2, w * 0.36, 5, 0, 0, 7); g.fill();
+  }
+  if (highlight) {
+    g.save(); g.strokeStyle = highlight; g.lineWidth = 3; g.shadowColor = highlight; g.shadowBlur = 12;
+    g.beginPath(); g.roundRect(x - w / 2 - 3, y - h + 4 + bob - 3, w + 6, h + 6, 10); g.stroke(); g.restore();
+  }
+  if (isReady(img)) g.drawImage(img, x - w / 2, y - h + 6 + bob, w, h);
+  if (name) drawNameTag(g, name, x, y - h - 2, nameColor);
 }
 
 // When each body first appeared on this client (ms), for the in-world kill effect.
 const bodySeen = new Map();
 const KILL_FX_MS = 700;
 
-// age: ms since the body appeared. A fresh body tips over and its blood pool spreads.
-function drawBody(g, b, age) {
-  const img = sprite(colorHex(b.color), 0, 1);
-  const fall = Math.min(1, age / 300);
+// age: ms since the body appeared. A fresh body drops in and its pool spreads.
+function drawBody(g, b, age = 1000) {
+  const img = robotImage({ hex: colorHex(b.color), hat: b.hat, state: 'body' });
   const pool = Math.min(1, age / 500);
+  const w = BODY_W * 1.5, h = w * BODY_ASPECT;
   g.save();
-  g.fillStyle = 'rgba(120,0,0,0.55)';
-  g.beginPath(); g.ellipse(b.x, b.y + 8, 26 * pool, 10 * pool, 0, 0, 7); g.fill();
-  g.translate(b.x, b.y);
-  g.rotate((Math.PI / 2) * fall);
-  g.drawImage(img, -SPRITE_W / 2, -SPRITE_H / 2);
+  g.fillStyle = 'rgba(120,10,30,.55)';
+  g.beginPath(); g.ellipse(b.x, b.y + 6, 28 * pool, 10 * pool, 0, 0, 7); g.fill();
+  if (isReady(img)) g.drawImage(img, b.x - w / 2, b.y - h / 2 - 2, w, h);
   g.restore();
 }
 
@@ -191,10 +113,9 @@ function drawKillFx(g, b, age) {
   const p = age / KILL_FX_MS;
   g.save();
   g.globalAlpha = 1 - p;
-  g.strokeStyle = '#ff1744';
+  g.strokeStyle = '#FF3D5A';
   g.lineWidth = 4;
   g.beginPath(); g.arc(b.x, b.y, 18 + 50 * p, 0, Math.PI * 2); g.stroke();
-  // Two crossing slashes that extend quickly.
   const s = Math.min(1, age / 150) * 34;
   g.strokeStyle = '#fff';
   g.lineWidth = 3;
@@ -202,8 +123,7 @@ function drawKillFx(g, b, age) {
   g.moveTo(b.x - s, b.y - s); g.lineTo(b.x + s, b.y + s);
   g.moveTo(b.x + s, b.y - s); g.lineTo(b.x - s, b.y + s);
   g.stroke();
-  // Droplets flying outwards.
-  g.fillStyle = '#c62828';
+  g.fillStyle = '#C62828';
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2 + 0.3;
     const r = 10 + 46 * p;
@@ -213,7 +133,7 @@ function drawKillFx(g, b, age) {
 }
 
 // ---------- Line of sight ----------
-// Walls (and locked doors) block vision; desks and tables are low enough to see over.
+// Solid walls (and locked doors) block vision. Glass walls and furniture don't.
 
 function rectSegments(o) {
   const x2 = o.x + o.w, y2 = o.y + o.h;
@@ -256,11 +176,9 @@ function exitDist(x, y, dx, dy, o) {
 }
 
 // Polygon (world coords) of everything visible from (x,y) within radius r.
-// Each ray stops a little way into the wall it hits, so only the part of a wall in view is lit.
 function visibilityPolygon(x, y, r, occluders) {
   const segs = [];
   for (const o of [...occluders, ...BOUNDS]) if (nearRect(o, x, y, r)) segs.push(...rectSegments(o));
-  // All angles in the same range as atan2 (-PI..PI) so sorting gives a clean, non-crossing outline.
   const angles = [];
   for (let i = 0; i < 128; i++) angles.push(-Math.PI + (i / 128) * Math.PI * 2);
   for (const [ax, ay] of segs) {
@@ -296,9 +214,8 @@ function lineOfSight(ax, ay, bx, by, occluders) {
 }
 
 // Draws one frame of the world.
-// opts: view, me {x,y,frame,facing}, others Map(id -> {x,y,frame,facing}), zoom, t, markers, killTargetId, vision
+// opts: view, me {x,y,frame,facing,moving}, others Map(id -> {x,y,frame,facing}), zoom, t, markers, killTargetId, vision
 export function drawWorld(g, cw, ch, opts) {
-  if (!staticLayer) staticLayer = buildStatic();
   const { view, me, others, zoom, t, markers = [], killTargetId, vision, dpr = 1 } = opts;
   const roster = new Map(view.roster.map((p) => [p.id, p]));
 
@@ -311,25 +228,29 @@ export function drawWorld(g, cw, ch, opts) {
   camY = vh >= WORLD.h + pad * 2 ? (WORLD.h - vh) / 2 : Math.max(-pad, Math.min(WORLD.h - vh + pad, camY));
 
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
-  g.fillStyle = '#0b0d10';
+  g.fillStyle = '#03050C';
   g.fillRect(0, 0, cw, ch);
   g.setTransform(zoom * dpr, 0, 0, zoom * dpr, -camX * zoom * dpr, -camY * zoom * dpr);
-  g.imageSmoothingEnabled = false;
-  g.drawImage(staticLayer, 0, 0);
+  drawFloor(g);
+  // Your unfinished tasks (and the device of a live sabotage) glow.
+  const todo = (view.me?.tasks || []).filter((tk) => !tk.done && !(opts.fakeDone && opts.fakeDone.has(tk.id)));
+  drawHighlights(g, new Set(todo.map((tk) => taskNum(tk.id))),
+    new Set(view.sabotage ? [{ lights: 'L', comms: 'C', wifi: 'W' }[view.sabotage.type]] : []), t);
+  drawVents(g);
 
-  // Locked doors.
+  // Locked doors: a hazard-striped bar across the doorway.
   const locked = new Set(Object.keys(view.doors || {}));
   for (const d of DOORS) {
-    if (!locked.has(d.roomId)) continue;
-    g.fillStyle = '#8d2b1f'; g.fillRect(d.x, d.y, d.w, d.h);
-    g.fillStyle = '#ff7043';
-    if (d.w > d.h) for (let x = d.x + 4; x < d.x + d.w; x += 10) g.fillRect(x, d.y + 2, 3, d.h - 4);
-    else for (let y = d.y + 4; y < d.y + d.h; y += 10) g.fillRect(d.x + 2, y, d.w - 4, 3);
+    if (!d.roomId || !locked.has(d.roomId)) continue;
+    g.fillStyle = '#3A0A14'; g.fillRect(d.x, d.y, d.w, d.h);
+    g.fillStyle = '#FF3D5A';
+    if (d.w > d.h) for (let x = d.x + 3; x < d.x + d.w; x += 9) g.fillRect(x, d.y + 2, 4, d.h - 4);
+    else for (let y = d.y + 3; y < d.y + d.h; y += 9) g.fillRect(d.x + 2, y, d.w - 4, 4);
   }
 
   // With limited vision, only what the local player can actually see is drawn.
   // A door that locks on top of the player doesn't blind them.
-  const occluders = [...WALLS, ...DOORS.filter((d) => locked.has(d.roomId)
+  const occluders = [...OPAQUE_WALLS, ...DOORS.filter((d) => d.roomId && locked.has(d.roomId)
     && !(me.x > d.x && me.x < d.x + d.w && me.y > d.y && me.y < d.y + d.h))];
   const canSee = (x, y) => !vision
     || (Math.hypot(x - me.x, y - me.y) <= vision && lineOfSight(me.x, me.y, x, y, occluders));
@@ -343,31 +264,33 @@ export function drawWorld(g, cw, ch, opts) {
 
   // Players, sorted by y so lower characters draw in front.
   const meRow = roster.get(view.me?.id);
+  const iAmImpostor = view.me?.role === 'impostor';
   const list = [];
   for (const p of view.players) {
     const info = roster.get(p.id);
     if (!info) continue;
     if (p.id === view.me?.id) {
       if (view.me.inVent) continue;
-      list.push({ id: p.id, x: me.x, y: me.y, frame: me.frame, facing: me.facing, alive: meRow?.alive, info });
+      list.push({ id: p.id, x: me.x, y: me.y, frame: me.frame, facing: me.facing, moving: me.moving, alive: meRow?.alive, info, fx: p.fx });
     } else {
       const o = others.get(p.id) || p;
       if (!canSee(o.x, o.y)) continue;
-      list.push({ id: p.id, x: o.x, y: o.y, frame: o.frame || 0, facing: o.facing || 1, alive: p.alive, info });
+      list.push({ id: p.id, x: o.x, y: o.y, frame: o.frame || 0, facing: o.facing || 1, moving: o.moving, alive: p.alive, info, fx: p.fx });
     }
   }
   list.sort((a, b) => a.y - b.y);
   for (const p of list) {
-    const isImpMate = p.info.role === 'impostor' && view.me?.role === 'impostor';
-    drawCharacter(g, p.x, p.y, colorHex(p.info.color), {
-      frame: p.frame, facing: p.facing, ghost: !p.alive,
-      name: p.info.name,
-      highlight: p.id === killTargetId ? '#ff1744' : null,
+    const isMe = p.id === view.me?.id;
+    const isMate = p.info.role === 'impostor' && iAmImpostor && !isMe;
+    drawRobot(g, p.x, p.y + 14, {
+      hex: colorHex(p.info.color), hat: p.info.hat, facing: p.facing, frame: p.frame, ghost: !p.alive, t,
+      moving: p.moving,
+      eyes: isMe && iAmImpostor ? EYE_IMPOSTOR : isMate ? EYE_IMPOSTOR : undefined,
+      name: isMe ? `${p.info.name}${p.alive ? '' : ' (ghost)'}` : p.info.name,
+      nameColor: isMate ? '#FF6B81' : isMe ? '#38E1FF' : '#EAF0FF',
+      highlight: p.id === killTargetId ? '#FF3D5A' : null,
     });
-    if (isImpMate && p.id !== view.me.id) {
-      g.fillStyle = '#ff1744'; g.font = '14px VT323, monospace'; g.textAlign = 'center';
-      g.fillText('impostor', p.x, p.y + SPRITE_H / 2 + 12); g.textAlign = 'left';
-    }
+    if (p.fx) drawTaskFx(g, p.x, p.y + 14, t);
   }
 
   for (const b of bodies) drawKillFx(g, b, t - bodySeen.get(b.id));
@@ -381,7 +304,9 @@ export function drawWorld(g, cw, ch, opts) {
     const f = fogLayer.getContext('2d');
     f.setTransform(1, 0, 0, 1, 0, 0);
     f.globalCompositeOperation = 'source-over';
-    f.fillStyle = 'rgb(5,6,10)';
+    f.clearRect(0, 0, W, H); // start every frame from nothing, otherwise the translucent fog piles up
+    // Fully opaque: nothing at all is shown outside the vision circle, not even the floor plan.
+    f.fillStyle = 'rgb(3,5,12)';
     f.fillRect(0, 0, W, H);
 
     const pts = visibilityPolygon(me.x, me.y, vision, occluders);
@@ -416,60 +341,31 @@ export function drawWorld(g, cw, ch, opts) {
   return { camX, camY };
 }
 
-// Small full-map view used by the map overlay and the security cameras.
-export function drawMiniMap(g, w, h, { view, me, markers = [], camerasOnly = false, t = 0, dpr = 1 }) {
-  if (!staticLayer) staticLayer = buildStatic();
+// The security camera feed: only the camera areas show, with whoever is standing in them.
+export function drawCameraFeed(g, w, h, { view, t = 0, dpr = 1 }) {
   const s = Math.min(w / WORLD.w, h / WORLD.h);
   const ox = (w - WORLD.w * s) / 2, oy = (h - WORLD.h * s) / 2;
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
-  g.clearRect(0, 0, w, h);
+  g.fillStyle = '#03050C'; g.fillRect(0, 0, w, h);
   g.setTransform(s * dpr, 0, 0, s * dpr, ox * dpr, oy * dpr);
-  g.imageSmoothingEnabled = false;
-  g.globalAlpha = camerasOnly ? 0.35 : 0.8;
-  g.drawImage(staticLayer, 0, 0);
-  g.globalAlpha = 1;
+  g.globalAlpha = 0.3; drawFloor(g); g.globalAlpha = 1;
   const roster = new Map(view.roster.map((p) => [p.id, p]));
-  if (camerasOnly) {
-    for (const c of CAMERAS) {
-      g.save(); g.beginPath(); g.rect(c.x, c.y, c.w, c.h); g.clip();
-      g.drawImage(staticLayer, 0, 0);
-      g.restore();
-      g.strokeStyle = '#66bb6a'; g.lineWidth = 4; g.strokeRect(c.x, c.y, c.w, c.h);
-      g.fillStyle = '#66bb6a'; g.font = '18px "Press Start 2P", monospace';
-      g.fillText(c.name, c.x + 8, c.y + 26);
-    }
-    if (Math.floor(t / 600) % 2 === 0) {
-      g.fillStyle = '#ff1744'; g.beginPath(); g.arc(WORLD.w - 40, WORLD.h - 40, 14, 0, 7); g.fill();
-    }
-    for (const p of view.players) {
-      const info = roster.get(p.id);
-      if (!info || !p.alive || p.id === view.me?.id) continue;
-      if (!CAMERAS.some((c) => p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h)) continue;
-      drawCharacter(g, p.x, p.y, colorHex(info.color), { facing: p.facing, frame: p.moving ? Math.floor(t / 150) % 2 : 0, name: info.name });
-    }
-    for (const b of view.bodies || []) {
-      if (CAMERAS.some((c) => b.x >= c.x && b.x <= c.x + c.w && b.y >= c.y && b.y <= c.y + c.h)) drawBody(g, b);
-    }
-  } else {
-    for (const m of markers) {
-      g.fillStyle = m.color;
-      g.beginPath(); g.arc(m.x, m.y, 14, 0, 7); g.fill();
-    }
-    if (me) {
-      g.fillStyle = '#fff';
-      g.beginPath(); g.arc(me.x, me.y, 18, 0, 7); g.fill();
-      g.fillStyle = colorHex(roster.get(view.me?.id)?.color);
-      g.beginPath(); g.arc(me.x, me.y, 12, 0, 7); g.fill();
-    }
+  const inCam = (p) => CAMERAS.some((c) => p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h);
+  for (const c of CAMERAS) {
+    g.save(); g.beginPath(); g.rect(c.x, c.y, c.w, c.h); g.clip(); drawFloor(g); g.restore();
+    g.strokeStyle = '#4ADE80'; g.lineWidth = 3; g.strokeRect(c.x, c.y, c.w, c.h);
+    g.fillStyle = '#4ADE80'; g.font = `700 16px ${FONT}`; g.fillText(c.name.toUpperCase(), c.x + 8, c.y + 22);
+  }
+  if (Math.floor(t / 600) % 2 === 0) { g.fillStyle = '#FF3D5A'; g.beginPath(); g.arc(WORLD.w - 40, 40, 11, 0, 7); g.fill(); }
+  for (const b of view.bodies || []) if (inCam(b)) drawBody(g, b);
+  for (const p of view.players) {
+    const info = roster.get(p.id);
+    if (!info || !p.alive || p.id === view.me?.id || !inCam(p)) continue;
+    drawRobot(g, p.x, p.y + 14, { hex: colorHex(info.color), hat: info.hat, facing: p.facing, frame: p.moving ? Math.floor(t / 150) % 2 : 0, name: info.name, t, moving: p.moving });
   }
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
-const urlCache = new Map();
-export function spriteURL(hex) {
-  if (!urlCache.has(hex)) urlCache.set(hex, sprite(hex, 0, 1).toDataURL());
-  return urlCache.get(hex);
-}
-
 export function taskDef(id) { return TASKS.find((t) => t.id === id); }
-export { SABOTAGE_FIX, CAMERA_CONSOLE, EMERGENCY_BUTTON, VENTS };
+function taskNum(id) { return TASKS.find((t) => t.id === id)?.num; }
+export { ROOMS, SABOTAGE_FIX };

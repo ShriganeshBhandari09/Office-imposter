@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
 import { Game } from './game.js';
+import { MAX_PLAYERS } from '../client/src/shared/map.js';
 
 const PORT = Number(process.env.PORT) || 3000;
 const TICK_MS = 50; // 20 updates per second
@@ -41,12 +42,13 @@ const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function newCode() {
   for (;;) {
     let c = '';
-    for (let i = 0; i < 4; i++) c += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
+    for (let i = 0; i < 5; i++) c += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
     if (!rooms.has(c)) return c;
   }
 }
 const cleanCode = (c) => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
 const cleanPid = (p) => String(p || '').slice(0, 64);
+const cleanRoomName = (room, host) => String(room || '').trim().slice(0, 24) || `${String(host || 'Office').trim().slice(0, 14)}'s office`;
 
 // Removes a player's socket from its current room (if any).
 function leaveCurrent(socket) {
@@ -60,12 +62,12 @@ function leaveCurrent(socket) {
   if (room && !stillHere) room.game.leave(info.pid);
 }
 
-function enterRoom(socket, code, pid, name, color) {
+function enterRoom(socket, code, pid, name, color, hat) {
   const room = rooms.get(code);
   if (!room) return { error: `No game found with code ${code}. Check the code with the host.` };
   const current = sockets.get(socket.id);
   if (current && (current.code !== code || current.pid !== pid)) leaveCurrent(socket);
-  const res = room.game.join(pid, name, color);
+  const res = room.game.join(pid, name, color, hat);
   if (!res.ok) return res;
   sockets.set(socket.id, { pid, code });
   socket.join(code);
@@ -85,30 +87,43 @@ io.on('connection', (socket) => {
     fn(g, info().pid, ...args);
   });
 
-  socket.on('createRoom', ({ pid, name, color } = {}, cb) => {
+  socket.on('createRoom', ({ pid, name, color, hat, roomName } = {}, cb) => {
     pid = cleanPid(pid);
     if (!pid) return reply(cb, { error: 'Missing player id.' });
     if (!String(name || '').trim()) return reply(cb, { error: 'Enter a name first.' });
     if (rooms.size >= MAX_ROOMS) return reply(cb, { error: 'The server is busy. Try again in a few minutes.' });
     const code = newCode();
-    rooms.set(code, { game: new Game(), emptySince: 0 });
-    const res = enterRoom(socket, code, pid, name, color);
+    rooms.set(code, { game: new Game(cleanRoomName(roomName, name)), emptySince: 0 });
+    const res = enterRoom(socket, code, pid, name, color, hat);
     if (!res.ok) rooms.delete(code);
     reply(cb, res);
   });
 
-  socket.on('join', ({ pid, name, color, code } = {}, cb) => {
+  socket.on('join', ({ pid, name, color, hat, code } = {}, cb) => {
     pid = cleanPid(pid);
     code = cleanCode(code);
     if (!pid) return reply(cb, { error: 'Missing player id.' });
     if (!code) return reply(cb, { error: 'Enter the room code.' });
-    reply(cb, enterRoom(socket, code, pid, name, color));
+    reply(cb, enterRoom(socket, code, pid, name, color, hat));
   });
 
   socket.on('leaveRoom', (_d, cb) => { leaveCurrent(socket); reply(cb); });
 
+  // "Games on this Wi-Fi": every open lobby that still has a free seat.
+  socket.on('listRooms', (_d, cb) => {
+    const list = [];
+    for (const [code, room] of rooms) {
+      const g = room.game;
+      if (g.phase !== 'lobby' || g.isEmpty() || g.players.size >= MAX_PLAYERS) continue;
+      list.push({ code, name: g.roomName, players: g.players.size, max: MAX_PLAYERS });
+    }
+    reply(cb, { ok: true, rooms: list.slice(0, 12) });
+  });
+
   on('setName', (g, pid, name, cb) => reply(cb, g.setName(pid, name)));
   on('setColor', (g, pid, color) => g.setColor(pid, color));
+  on('setHat', (g, pid, hat) => g.setHat(pid, hat));
+  on('active', (g, pid) => g.touch(pid));
   on('settings', (g, pid, s) => g.updateSettings(pid, s || {}));
   on('start', (g, pid, _d, cb) => reply(cb, g.start(pid)));
   on('backToLobby', (g, pid) => g.backToLobby(pid));

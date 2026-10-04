@@ -1,0 +1,638 @@
+{
+ "note": "Each PNG is drawn at 8x the map size (1 map px = 8 image px) with 4px padding (10px for highlight) in map units. Wall-mounted items are drawn with the wall along their TOP edge: rotate 180deg for wall \"s\", -90deg for \"w\", 90deg for \"e\". Positions are in office-map.json coordinates (820 x 690). Draw at sizeInMapPx * (worldWidth / 820).",
+ "icons": [
+  {
+   "file": "task-01-brew-chai.png",
+   "highlightFile": "task-01-brew-chai-highlight.png",
+   "kind": "task",
+   "id": 1,
+   "sizeInMapPx": {
+    "w": 22,
+    "h": 22
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Brew chai",
+   "room": "cafeteria",
+   "position": [
+    26,
+    140
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 40,
+    "y": 40,
+    "w": 240,
+    "h": 240
+   }
+  },
+  {
+   "file": "task-02-clean-the-spill.png",
+   "highlightFile": "task-02-clean-the-spill-highlight.png",
+   "kind": "task",
+   "id": 2,
+   "sizeInMapPx": {
+    "w": 26,
+    "h": 22
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Clean the spill",
+   "room": "cafeteria",
+   "position": [
+    150,
+    185
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 344,
+    "y": 40,
+    "w": 272,
+    "h": 240
+   }
+  },
+  {
+   "file": "task-03-debug-the-server.png",
+   "highlightFile": "task-03-debug-the-server-highlight.png",
+   "kind": "task",
+   "id": 3,
+   "sizeInMapPx": {
+    "w": 22,
+    "h": 20
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Debug the server",
+   "room": "spark",
+   "position": [
+    252,
+    80
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 680,
+    "y": 48,
+    "w": 240,
+    "h": 224
+   }
+  },
+  {
+   "file": "task-04-shred-documents.png",
+   "highlightFile": "task-04-shred-documents-highlight.png",
+   "kind": "task",
+   "id": 4,
+   "sizeInMapPx": {
+    "w": 20,
+    "h": 22
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Shred documents",
+   "room": "hive",
+   "position": [
+    355,
+    94
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 1008,
+    "y": 40,
+    "w": 224,
+    "h": 240
+   }
+  },
+  {
+   "file": "task-05-reboot-managers-pc.png",
+   "highlightFile": "task-05-reboot-managers-pc-highlight.png",
+   "kind": "task",
+   "id": 5,
+   "sizeInMapPx": {
+    "w": 24,
+    "h": 20
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Reboot manager\u2019s PC",
+   "room": "hive",
+   "position": [
+    331,
+    46
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 1312,
+    "y": 48,
+    "w": 256,
+    "h": 224
+   }
+  },
+  {
+   "file": "task-06-restock-supplies.png",
+   "highlightFile": "task-06-restock-supplies-highlight.png",
+   "kind": "task",
+   "id": 6,
+   "sizeInMapPx": {
+    "w": 24,
+    "h": 10
+   },
+   "pngScale": 8,
+   "wallMounted": true,
+   "name": "Restock supplies",
+   "room": "pixel",
+   "position": [
+    95,
+    372
+   ],
+   "wall": "s",
+   "sheetFrame": {
+    "x": 32,
+    "y": 408,
+    "w": 256,
+    "h": 144
+   }
+  },
+  {
+   "file": "task-07-sort-files.png",
+   "highlightFile": "task-07-sort-files-highlight.png",
+   "kind": "task",
+   "id": 7,
+   "sizeInMapPx": {
+    "w": 22,
+    "h": 18
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Sort files",
+   "room": "pixel",
+   "position": [
+    168,
+    445
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 360,
+    "y": 376,
+    "w": 240,
+    "h": 208
+   }
+  },
+  {
+   "file": "task-08-sign-the-files.png",
+   "highlightFile": "task-08-sign-the-files-highlight.png",
+   "kind": "task",
+   "id": 8,
+   "sizeInMapPx": {
+    "w": 16,
+    "h": 20
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Sign the files",
+   "room": "den",
+   "position": [
+    260,
+    426
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 704,
+    "y": 368,
+    "w": 192,
+    "h": 224
+   }
+  },
+  {
+   "file": "task-09-water-the-plant.png",
+   "highlightFile": "task-09-water-the-plant-highlight.png",
+   "kind": "task",
+   "id": 9,
+   "sizeInMapPx": {
+    "w": 22,
+    "h": 22
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Water the plant",
+   "room": "den",
+   "position": [
+    300,
+    455
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 1000,
+    "y": 360,
+    "w": 240,
+    "h": 240
+   }
+  },
+  {
+   "file": "task-10-sign-in-guests.png",
+   "highlightFile": "task-10-sign-in-guests-highlight.png",
+   "kind": "task",
+   "id": 10,
+   "sizeInMapPx": {
+    "w": 20,
+    "h": 16
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Sign in guests",
+   "room": "lobby",
+   "position": [
+    383,
+    266
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 1328,
+    "y": 384,
+    "w": 224,
+    "h": 192
+   }
+  },
+  {
+   "file": "task-11-align-the-projector.png",
+   "highlightFile": "task-11-align-the-projector-highlight.png",
+   "kind": "task",
+   "id": 11,
+   "sizeInMapPx": {
+    "w": 22,
+    "h": 16
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Align the projector",
+   "room": "conference",
+   "position": [
+    598,
+    408
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 40,
+    "y": 704,
+    "w": 240,
+    "h": 192
+   }
+  },
+  {
+   "file": "task-12-wipe-the-whiteboard.png",
+   "highlightFile": "task-12-wipe-the-whiteboard-highlight.png",
+   "kind": "task",
+   "id": 12,
+   "sizeInMapPx": {
+    "w": 34,
+    "h": 7
+   },
+   "pngScale": 8,
+   "wallMounted": true,
+   "name": "Wipe the whiteboard",
+   "room": "conference",
+   "position": [
+    541,
+    343
+   ],
+   "wall": "n",
+   "sheetFrame": {
+    "x": 312,
+    "y": 740,
+    "w": 336,
+    "h": 120
+   }
+  },
+  {
+   "file": "task-13-swipe-id-card.png",
+   "highlightFile": "task-13-swipe-id-card-highlight.png",
+   "kind": "task",
+   "id": 13,
+   "sizeInMapPx": {
+    "w": 12,
+    "h": 10
+   },
+   "pngScale": 8,
+   "wallMounted": true,
+   "name": "Swipe ID card",
+   "room": "call-1",
+   "position": [
+    740,
+    417
+   ],
+   "wall": "s",
+   "sheetFrame": {
+    "x": 720,
+    "y": 728,
+    "w": 160,
+    "h": 144
+   }
+  },
+  {
+   "file": "task-14-answer-the-phone.png",
+   "highlightFile": "task-14-answer-the-phone-highlight.png",
+   "kind": "task",
+   "id": 14,
+   "sizeInMapPx": {
+    "w": 20,
+    "h": 16
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Answer the phone",
+   "room": "call-1",
+   "position": [
+    794,
+    452
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 1008,
+    "y": 704,
+    "w": 224,
+    "h": 192
+   }
+  },
+  {
+   "file": "task-15-reconnect-headset.png",
+   "highlightFile": "task-15-reconnect-headset-highlight.png",
+   "kind": "task",
+   "id": 15,
+   "sizeInMapPx": {
+    "w": 20,
+    "h": 18
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Reconnect headset",
+   "room": "call-2",
+   "position": [
+    794,
+    516
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 1328,
+    "y": 696,
+    "w": 224,
+    "h": 208
+   }
+  },
+  {
+   "file": "task-16-transcribe-the-call.png",
+   "highlightFile": "task-16-transcribe-the-call-highlight.png",
+   "kind": "task",
+   "id": 16,
+   "sizeInMapPx": {
+    "w": 22,
+    "h": 18
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Transcribe the call",
+   "room": "call-3",
+   "position": [
+    794,
+    580
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 40,
+    "y": 1016,
+    "w": 240,
+    "h": 208
+   }
+  },
+  {
+   "file": "task-17-upload-attendance.png",
+   "highlightFile": "task-17-upload-attendance-highlight.png",
+   "kind": "task",
+   "id": 17,
+   "sizeInMapPx": {
+    "w": 16,
+    "h": 11
+   },
+   "pngScale": 8,
+   "wallMounted": true,
+   "name": "Upload attendance",
+   "room": "workspace",
+   "position": [
+    480,
+    12
+   ],
+   "wall": "n",
+   "sheetFrame": {
+    "x": 384,
+    "y": 1044,
+    "w": 192,
+    "h": 152
+   }
+  },
+  {
+   "file": "task-18-fix-laptop-wires.png",
+   "highlightFile": "task-18-fix-laptop-wires-highlight.png",
+   "kind": "task",
+   "id": 18,
+   "sizeInMapPx": {
+    "w": 22,
+    "h": 10
+   },
+   "pngScale": 8,
+   "wallMounted": true,
+   "name": "Fix laptop wires",
+   "room": "workspace",
+   "position": [
+    808,
+    180
+   ],
+   "wall": "e",
+   "sheetFrame": {
+    "x": 680,
+    "y": 1048,
+    "w": 240,
+    "h": 144
+   }
+  },
+  {
+   "file": "task-19-type-the-code.png",
+   "highlightFile": "task-19-type-the-code-highlight.png",
+   "kind": "task",
+   "id": 19,
+   "sizeInMapPx": {
+    "w": 22,
+    "h": 18
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Type the code",
+   "room": "workspace",
+   "position": [
+    540,
+    534
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 1000,
+    "y": 1016,
+    "w": 240,
+    "h": 208
+   }
+  },
+  {
+   "file": "task-20-refill-the-printer.png",
+   "highlightFile": "task-20-refill-the-printer-highlight.png",
+   "kind": "task",
+   "id": 20,
+   "sizeInMapPx": {
+    "w": 24,
+    "h": 20
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Refill the printer",
+   "room": "workspace",
+   "position": [
+    705,
+    652
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 1312,
+    "y": 1008,
+    "w": 256,
+    "h": 224
+   }
+  },
+  {
+   "file": "task-21-sort-sticky-notes.png",
+   "highlightFile": "task-21-sort-sticky-notes-highlight.png",
+   "kind": "task",
+   "id": 21,
+   "sizeInMapPx": {
+    "w": 26,
+    "h": 8
+   },
+   "pngScale": 8,
+   "wallMounted": true,
+   "name": "Sort sticky notes",
+   "room": "pixel",
+   "position": [
+    150,
+    473
+   ],
+   "wall": "n",
+   "sheetFrame": {
+    "x": 24,
+    "y": 1376,
+    "w": 272,
+    "h": 128
+   }
+  },
+  {
+   "file": "task-22-charge-the-laptop.png",
+   "highlightFile": "task-22-charge-the-laptop-highlight.png",
+   "kind": "task",
+   "id": 22,
+   "sizeInMapPx": {
+    "w": 24,
+    "h": 18
+   },
+   "pngScale": 8,
+   "wallMounted": false,
+   "name": "Charge the laptop",
+   "room": "workspace",
+   "position": [
+    192,
+    553
+   ],
+   "wall": null,
+   "sheetFrame": {
+    "x": 352,
+    "y": 1336,
+    "w": 256,
+    "h": 208
+   }
+  },
+  {
+   "file": "sabotage-L-light-switch.png",
+   "highlightFile": "sabotage-L-light-switch-highlight.png",
+   "kind": "sabotage",
+   "id": "L",
+   "sizeInMapPx": {
+    "w": 20,
+    "h": 9
+   },
+   "pngScale": 8,
+   "wallMounted": true,
+   "name": "Fix lights",
+   "positions": [
+    {
+     "x": 153,
+     "y": 238,
+     "wall": "w"
+    }
+   ],
+   "sheetFrame": {
+    "x": 688,
+    "y": 1372,
+    "w": 224,
+    "h": 136
+   }
+  },
+  {
+   "file": "sabotage-C-network-switch.png",
+   "highlightFile": "sabotage-C-network-switch-highlight.png",
+   "kind": "sabotage",
+   "id": "C",
+   "sizeInMapPx": {
+    "w": 26,
+    "h": 11
+   },
+   "pngScale": 8,
+   "wallMounted": true,
+   "name": "Fix network",
+   "positions": [
+    {
+     "x": 500,
+     "y": 248,
+     "wall": "n"
+    }
+   ],
+   "sheetFrame": {
+    "x": 984,
+    "y": 1364,
+    "w": 272,
+    "h": 152
+   }
+  },
+  {
+   "file": "sabotage-W-wifi-router.png",
+   "highlightFile": "sabotage-W-wifi-router-highlight.png",
+   "kind": "sabotage",
+   "id": "W",
+   "sizeInMapPx": {
+    "w": 18,
+    "h": 12
+   },
+   "pngScale": 8,
+   "wallMounted": true,
+   "name": "Reset Wi-Fi",
+   "positions": [
+    {
+     "x": 720,
+     "y": 343,
+     "wall": "n"
+    },
+    {
+     "x": 770,
+     "y": 611,
+     "wall": "s"
+    }
+   ],
+   "sheetFrame": {
+    "x": 1336,
+    "y": 1360,
+    "w": 208,
+    "h": 160
+   }
+  }
+ ]
+}

@@ -1,87 +1,92 @@
+// Sanity checks for the office map. Run: node map/validate-map.mjs
 import {
-  WORLD, ROOMS, DESKS, TABLES, WALLS, DOORS, VENTS, TASKS, SABOTAGE_FIX,
-  EMERGENCY_BUTTON, CAMERA_CONSOLE, CAMERAS, USE_RANGE, PLAYER_R, collides, obstaclesFor, spawnPoint,
+  WORLD, ROOMS, FURNITURE, WALLS, DOORS, VENTS, TASKS, SABOTAGE_FIX, MAX_PLAYERS, PLAYER_R,
+  EMERGENCY_BUTTON, CAMERA_CONSOLE, CAMERAS, USE_RANGE, collides, obstaclesFor, spawnPoint,
 } from '../client/src/shared/map.js';
 
 let errors = 0;
 const err = (msg) => { console.log('FAIL:', msg); errors++; };
 
-console.log('WORLD', WORLD);
-console.log('ROOMS:', ROOMS.length, 'WALLS:', WALLS.length, 'DOORS:', DOORS.length);
+console.log('WORLD', WORLD, '| rooms', ROOMS.length, 'walls', WALLS.length, 'doors', DOORS.length, 'furniture', FURNITURE.length);
 
-// Every room must fit inside WORLD.
 for (const r of ROOMS) {
   if (r.x < 0 || r.y < 0 || r.x + r.w > WORLD.w || r.y + r.h > WORLD.h) err(`room ${r.id} out of bounds`);
 }
+for (const d of DOORS) if (!d.roomId) err(`door at ${d.x},${d.y} belongs to no room`);
+for (const r of ROOMS.filter((r) => r.lockable)) {
+  if (!DOORS.some((d) => d.roomId === r.id)) err(`lockable room ${r.id} has no door`);
+}
 
-// No two rooms should overlap (other than touching edges).
-for (let i = 0; i < ROOMS.length; i++) {
-  for (let j = i + 1; j < ROOMS.length; j++) {
-    const a = ROOMS[i], b = ROOMS[j];
-    const ox = Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x));
-    const oy = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
-    if (ox > 0.01 && oy > 0.01) err(`rooms ${a.id} and ${b.id} overlap by ${ox}x${oy}`);
+const open = obstaclesFor([]);
+const inBounds = (p) => p.x >= 0 && p.y >= 0 && p.x <= WORLD.w && p.y <= WORLD.h;
+
+for (let i = 0; i < MAX_PLAYERS; i++) {
+  const p = spawnPoint(i);
+  if (!inBounds(p) || collides(p.x, p.y, open)) err(`spawn ${i} at ${p.x},${p.y} is blocked`);
+}
+if (collides(EMERGENCY_BUTTON.x, EMERGENCY_BUTTON.y, WALLS, 1)) err('emergency button inside a wall');
+
+// Walkable grid (cells where a player's circle fits), flood-filled from the first spawn.
+const CELL = 3;
+const GW = Math.ceil(WORLD.w / CELL), GH = Math.ceil(WORLD.h / CELL);
+const walk = (r) => {
+  const g = new Uint8Array(GW * GH);
+  for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) g[y * GW + x] = collides(x * CELL + CELL / 2, y * CELL + CELL / 2, open, r) ? 0 : 1;
+  return g;
+};
+function flood(g, from) {
+  const seen = new Uint8Array(GW * GH);
+  const q = [Math.floor(from.y / CELL) * GW + Math.floor(from.x / CELL)];
+  seen[q[0]] = 1;
+  for (let h = 0; h < q.length; h++) {
+    const i = q[h], x = i % GW, y = (i / GW) | 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= GW || ny >= GH) continue;
+      const j = ny * GW + nx;
+      if (g[j] && !seen[j]) { seen[j] = 1; q.push(j); }
+    }
+  }
+  return seen;
+}
+// A target is reachable if some reachable cell lies within `range` of it.
+const reaches = (seen, t, range) => {
+  const r = Math.ceil(range / CELL);
+  const cx = Math.floor(t.x / CELL), cy = Math.floor(t.y / CELL);
+  for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) {
+    if (x < 0 || y < 0 || x >= GW || y >= GH || !seen[y * GW + x]) continue;
+    if (Math.hypot((x + 0.5) * CELL - t.x, (y + 0.5) * CELL - t.y) <= range) return true;
+  }
+  return false;
+};
+
+// Players (radius 14) and bots (radius 15, so they keep clear of walls) must both get everywhere.
+for (const [label, radius] of [['player', PLAYER_R], ['bot', PLAYER_R + 1]]) {
+  const seen = flood(walk(radius), spawnPoint(0));
+  for (let i = 1; i < MAX_PLAYERS; i++) {
+    const sp = spawnPoint(i);
+    if (!seen[Math.floor(sp.y / CELL) * GW + Math.floor(sp.x / CELL)]) err(`${label} spawn ${i} at ${sp.x},${sp.y} is walled off from the rest of the map`);
+  }
+  for (const t of TASKS) if (!reaches(seen, t, USE_RANGE * 0.9)) err(`${label} cannot reach task ${t.num} ${t.name}`);
+  for (const [type, fixes] of Object.entries(SABOTAGE_FIX)) for (const f of fixes) if (!reaches(seen, f, USE_RANGE * 0.9)) err(`${label} cannot reach ${type} fix ${f.id}`);
+  for (const v of VENTS) if (!reaches(seen, v, USE_RANGE * 0.9)) err(`${label} cannot reach vent ${v.id}`);
+  if (!reaches(seen, EMERGENCY_BUTTON, USE_RANGE)) err(`${label} cannot reach the emergency button`);
+  if (!reaches(seen, CAMERA_CONSOLE, USE_RANGE)) err(`${label} cannot reach the camera console`);
+  for (const r of ROOMS) {
+    let ok = false;
+    for (let y = r.y; y < r.y + r.h && !ok; y += CELL) for (let x = r.x; x < r.x + r.w; x += CELL) {
+      if (seen[Math.floor(y / CELL) * GW + Math.floor(x / CELL)]) { ok = true; break; }
+    }
+    if (!ok) err(`${label} cannot reach room ${r.id}`);
   }
 }
 
-// Doors: each door's gap must lie fully within its room's side length.
-for (const r of ROOMS) {
-  for (const d of r.doors) {
-    const len = (d.side === 'top' || d.side === 'bottom') ? r.w : r.h;
-    const a = d.at - d.size / 2, b = d.at + d.size / 2;
-    if (a < 0 || b > len) err(`door on ${r.id}/${d.side} at=${d.at} size=${d.size} exceeds side length ${len}`);
-  }
-}
-
-// No desk/table should sit on top of a door (would block the doorway).
-const obstacles = [...DESKS, ...TABLES];
-for (const o of obstacles) {
-  for (const d of DOORS) {
-    const ox = Math.max(0, Math.min(o.x + o.w, d.x + d.w) - Math.max(o.x, d.x));
-    const oy = Math.max(0, Math.min(o.y + o.h, d.y + d.h) - Math.max(o.y, d.y));
-    if (ox > 0 && oy > 0) err(`obstacle ${o.id || o.name} blocks door of ${d.roomId}`);
-  }
-}
-
-// Emergency button must be walkable (not inside a wall/desk/table).
-const obs = obstaclesFor([]);
-if (collides(EMERGENCY_BUTTON.x, EMERGENCY_BUTTON.y, obs)) err('EMERGENCY_BUTTON is inside an obstacle');
-if (collides(CAMERA_CONSOLE.x, CAMERA_CONSOLE.y, obs)) err('CAMERA_CONSOLE is inside an obstacle');
-
-// Spawn ring for up to 12 players must all be walkable and in-bounds.
-for (let i = 0; i < 12; i++) {
-  const p = spawnPoint(i, 12);
-  if (p.x < PLAYER_R || p.y < PLAYER_R || p.x > WORLD.w - PLAYER_R || p.y > WORLD.h - PLAYER_R) {
-    err(`spawn point ${i} out of world bounds: ${p.x},${p.y}`);
-  }
-  if (collides(p.x, p.y, obs)) err(`spawn point ${i} collides with an obstacle at ${p.x},${p.y}`);
-}
-
-// Every task must be within bounds and not embedded inside a wall.
-for (const t of TASKS) {
-  if (t.x < 0 || t.y < 0 || t.x > WORLD.w || t.y > WORLD.h) err(`task ${t.id} out of bounds`);
-  if (collides(t.x, t.y, WALLS, 1)) err(`task ${t.id} sits inside a wall`);
-}
-
-// Sabotage fix points same check.
-for (const [type, fixes] of Object.entries(SABOTAGE_FIX)) {
-  for (const f of fixes) {
-    if (f.x < 0 || f.y < 0 || f.x > WORLD.w || f.y > WORLD.h) err(`sabotage ${type}/${f.id} out of bounds`);
-    if (collides(f.x, f.y, WALLS, 1)) err(`sabotage ${type}/${f.id} sits inside a wall`);
-  }
-}
-
-// Vents must be linked pairs (a.to === b.id and b.to === a.id) and in-bounds, not inside a wall.
+// Vents come in mutual pairs.
 const ventMap = new Map(VENTS.map((v) => [v.id, v]));
 for (const v of VENTS) {
-  if (v.x < 0 || v.y < 0 || v.x > WORLD.w || v.y > WORLD.h) err(`vent ${v.id} out of bounds`);
-  if (collides(v.x, v.y, WALLS, 1)) err(`vent ${v.id} sits inside a wall`);
   const partner = ventMap.get(v.to);
-  if (!partner) err(`vent ${v.id} points to missing vent ${v.to}`);
-  else if (partner.to !== v.id) err(`vent ${v.id} <-> ${v.to} link is not mutual`);
+  if (!partner || partner.to !== v.id) err(`vent ${v.id} <-> ${v.to} link is not mutual`);
 }
-
-// Cameras in-bounds.
 for (const c of CAMERAS) {
   if (c.x < 0 || c.y < 0 || c.x + c.w > WORLD.w || c.y + c.h > WORLD.h) err(`camera ${c.name} out of bounds`);
 }

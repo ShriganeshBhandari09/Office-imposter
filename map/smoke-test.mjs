@@ -24,7 +24,7 @@ let maxTaskProgress = 0;
 const movedAtLeastOnce = new Set();
 const startPos = new Map([...game.players.values()].map((p) => [p.id, { x: p.x, y: p.y }]));
 
-const RUN_MS = 25000; // 25 real seconds
+const RUN_MS = Number(process.env.RUN_MS) || 25000; // real milliseconds to simulate
 const started = Date.now();
 while (Date.now() - started < RUN_MS) {
   game.tick();
@@ -37,7 +37,7 @@ while (Date.now() - started < RUN_MS) {
   maxTaskProgress = Math.max(maxTaskProgress, game.taskProgress());
   for (const p of game.players.values()) {
     if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) throw new Error(`${p.name} has invalid position ${p.x},${p.y}`);
-    if (p.x < 0 || p.y < 0 || p.x > 1000 || p.y > 840) throw new Error(`${p.name} left world bounds: ${p.x},${p.y}`);
+    if (p.x < 0 || p.y < 0 || p.x > 1070 || p.y > 900) throw new Error(`${p.name} left world bounds: ${p.x},${p.y}`);
     const s = startPos.get(p.id);
     if (Math.hypot(p.x - s.x, p.y - s.y) > 5) movedAtLeastOnce.add(p.id);
   }

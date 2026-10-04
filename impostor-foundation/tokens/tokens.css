@@ -1,0 +1,106 @@
+/* Impostor.exe design tokens. Load fonts first:
+   https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Russo+One&display=swap */
+:root {
+  --bg-void: #03050C;
+  --bg-base: #070B18;
+  --surface-100: #0A0F20;
+  --surface-200: #0F1630;
+  --surface-300: #141D38;
+  --surface-400: #18213D;
+  --surface-select: #1C2850;
+  --line-100: #1E2A4A;
+  --line-200: #2A3558;
+  --line-dashed: #3A4A78;
+  --ink: #EAF0FF;
+  --ink-soft: #C9D3EE;
+  --ink-muted: #9FB0D8;
+  --ink-dim: #8E9BC2;
+  --ink-faint: #6E7AA0;
+  --ink-on-yellow: #0A0F1E;
+  --cyan-ink: #04222A;
+  --yellow-500: #FFCF3F;
+  --yellow-700: #B38A12;
+  --cyan-500: #38E1FF;
+  --cyan-700: #127A90;
+  --green-500: #4ADE80;
+  --green-700: #1F8A45;
+  --red-500: #FF3D5A;
+  --red-300: #FF6B81;
+  --red-700: #8A0F24;
+  --red-surface: #3A0A14;
+  --orange-500: #FF8A1F;
+  --orange-700: #9A4A00;
+  --ghost-500: #5AA8FF;
+  --ghost-300: #9FD8FF;
+  --panel-bg: #0D121C;
+  --panel-inset: #0A0E15;
+  --panel-line: rgba(148,163,184,0.16);
+  --panel-ink: #D5DCE6;
+  --panel-muted: #7C8799;
+  --panel-accent: #5CE1E6;
+  --panel-alert: #FF6B7D;
+  --panel-warn: #F5B84B;
+  --map-ground: #07090C;
+  --map-floor: #16191F;
+  --map-wall: #3A414C;
+  --map-wall-outer: #2E343D;
+  --map-glass: rgba(160,210,240,0.3);
+  --map-door: #7FE3FF;
+  --map-desk: #434A55;
+  --map-task: #3FAE5A;
+  --map-emergency: #FF4D63;
+  --avatar-cyan: #29D3E6;
+  --avatar-red: #E5484D;
+  --avatar-blue: #3E63DD;
+  --avatar-green: #30A46C;
+  --avatar-yellow: #F5D90A;
+  --avatar-orange: #F76B15;
+  --avatar-purple: #8E4EC6;
+  --avatar-pink: #E93D82;
+  --avatar-lime: #99D52A;
+  --avatar-white: #EDEEF0;
+  --avatar-brown: #8D5A3B;
+  --avatar-slate: #5B6478;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --grid-menu: 40px;
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
+  --radius-frame: 28px;
+  --radius-pill: 999px;
+  --press-yellow: 0 6px 0 #B38A12;
+  --press-cyan: 0 6px 0 #127A90;
+  --press-red: 0 6px 0 #8A0F24;
+  --press-neutral: 0 5px 0 #0A1022;
+  --panel: 0 24px 48px rgba(0,0,0,0.55);
+  --glow-red: 0 0 24px rgba(255,61,90,0.45);
+  --glow-yellow: 0 0 24px rgba(255,207,63,0.45);
+  --font-display: "Russo One", "Chakra Petch", system-ui, sans-serif;
+  --font-ui: "Chakra Petch", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+
+.type-logo { font-family: var(--font-display); font-size: 120px; line-height: 114px; font-weight: 400; text-transform: uppercase; }
+.type-screen-title { font-family: var(--font-display); font-size: 96px; line-height: 96px; font-weight: 400; text-transform: uppercase; }
+.type-page-title { font-family: var(--font-display); font-size: 32px; line-height: 38px; font-weight: 400; text-transform: uppercase; }
+.type-button-xl { font-family: var(--font-display); font-size: 24px; line-height: 28px; font-weight: 400; text-transform: uppercase; }
+.type-button { font-family: var(--font-display); font-size: 18px; line-height: 22px; font-weight: 400; text-transform: uppercase; }
+.type-panel-title { font-family: var(--font-display); font-size: 16px; line-height: 20px; font-weight: 400; text-transform: uppercase; }
+.type-lead { font-family: var(--font-ui); font-size: 22px; line-height: 31px; font-weight: 400; }
+.type-body { font-family: var(--font-ui); font-size: 16px; line-height: 22px; font-weight: 400; }
+.type-row { font-family: var(--font-ui); font-size: 15px; line-height: 20px; font-weight: 700; }
+.type-label { font-family: var(--font-ui); font-size: 13px; line-height: 16px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.type-caption { font-family: var(--font-ui); font-size: 12px; line-height: 16px; font-weight: 600; }
+.type-name-tag { font-family: var(--font-ui); font-size: 10px; line-height: 12px; font-weight: 700; }
+.type-readout { font-family: var(--font-mono); font-size: 44px; line-height: 44px; font-weight: 500; }
+.type-mono { font-family: var(--font-mono); font-size: 12px; line-height: 16px; font-weight: 400; }
+.type-mono-caption { font-family: var(--font-mono); font-size: 10px; line-height: 14px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; }

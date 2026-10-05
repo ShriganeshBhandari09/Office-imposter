@@ -3,12 +3,18 @@
 // "highlight" look. Positions and sizes come from the design map, scaled into world units.
 import { WORLD, MAP_SCALE } from './shared/map.js';
 import ICONS from './shared/task-icons.data.js';
+import PLANTS from './shared/plants.data.js';
 
 const BASE = `${import.meta.env.BASE_URL || '/'}task-icons/`;
 const PAD = 4, PAD_HI = 10; // padding baked into the PNGs, in map px
 const ROTATE = { n: 0, s: Math.PI, w: -Math.PI / 2, e: Math.PI / 2 }; // the art has the wall along its top edge
 
 const entries = ICONS.map((i) => ({ ...i, img: null, hi: null }));
+// Potted plants, in world units. They are drawn from the side, so the game sorts them in with the players by
+// their pot base (y): a player standing behind a plant is hidden by it.
+export const plants = PLANTS.map((p) => ({
+  ...p, img: null, x: p.x * MAP_SCALE, y: p.y * MAP_SCALE, w: p.w * MAP_SCALE, h: p.h * MAP_SCALE,
+}));
 let loading = null;
 let layer = null;
 
@@ -22,7 +28,10 @@ const load = (file) => new Promise((resolve) => {
 // Starts loading every icon (once); resolves when they are all in.
 export function loadIcons() {
   if (!loading) {
-    loading = Promise.all(entries.map(async (e) => { e.img = await load(e.file); e.hi = await load(e.highlight); }));
+    loading = Promise.all([
+      ...entries.map(async (e) => { e.img = await load(e.file); e.hi = await load(e.highlight); }),
+      ...plants.map(async (p) => { p.img = await load(p.file); }),
+    ]);
   }
   return loading;
 }
@@ -67,4 +76,13 @@ export function drawHighlights(g, taskNums, devices, t = 0) {
     if (on && e.hi) for (const s of e.spots) drawOne(g, e.hi, s, e.w, e.h, PAD_HI);
   }
   g.restore();
+}
+
+export function drawPlant(g, p) {
+  if (p.img) g.drawImage(p.img, p.x - p.w / 2, p.y - p.h, p.w, p.h);
+}
+
+// Every plant at once, for views without players (the map screen).
+export function drawPlants(g) {
+  for (const p of plants) drawPlant(g, p);
 }

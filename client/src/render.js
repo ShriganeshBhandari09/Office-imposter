@@ -2,7 +2,7 @@ import {
   WORLD, ROOMS, DOORS, OPAQUE_WALLS, VENTS, TASKS, SABOTAGE_FIX, CAMERAS,
 } from './shared/map.js';
 import { mapImage, mapIsReady } from './assets.js';
-import { drawObjects, drawHighlights } from './taskIcons.js';
+import { drawObjects, drawHighlights, plants, drawPlant, drawPlants } from './taskIcons.js';
 import { robotImage, isReady, colorHex, EYE_IMPOSTOR, ROBOT_ASPECT, BODY_ASPECT } from './robot.js';
 
 export { colorHex };
@@ -273,7 +273,7 @@ export function drawWorld(g, cw, ch, opts) {
   const bodies = allBodies.filter((b) => canSee(b.x, b.y));
   for (const b of bodies) drawBody(g, b, t - bodySeen.get(b.id));
 
-  // Players, sorted by y so lower characters draw in front.
+  // Players and potted plants, sorted by y so whatever stands lower draws in front.
   const meRow = roster.get(view.me?.id);
   const iAmImpostor = view.me?.role === 'impostor';
   const list = [];
@@ -289,8 +289,11 @@ export function drawWorld(g, cw, ch, opts) {
       list.push({ id: p.id, x: o.x, y: o.y, frame: o.frame || 0, facing: o.facing || 1, moving: o.moving, alive: p.alive, info, fx: p.fx });
     }
   }
+  // A robot's feet (its shadow) are about 16 below its position; a plant's y is its pot base.
+  for (const pl of plants) list.push({ plant: pl, y: pl.y - 16 });
   list.sort((a, b) => a.y - b.y);
   for (const p of list) {
+    if (p.plant) { drawPlant(g, p.plant); continue; }
     const isMe = p.id === view.me?.id;
     const isMate = p.info.role === 'impostor' && iAmImpostor && !isMe;
     drawRobot(g, p.x, p.y + 14, {
@@ -361,11 +364,11 @@ export function drawCameraFeed(g, w, h, { view, t = 0, dpr = 1 }) {
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   g.fillStyle = '#03050C'; g.fillRect(0, 0, w, h);
   g.setTransform(s * dpr, 0, 0, s * dpr, ox * dpr, oy * dpr);
-  g.globalAlpha = 0.3; drawFloor(g); g.globalAlpha = 1;
+  g.globalAlpha = 0.3; drawFloor(g); drawPlants(g); g.globalAlpha = 1;
   const roster = new Map(view.roster.map((p) => [p.id, p]));
   const inCam = (p) => CAMERAS.some((c) => p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h);
   for (const c of CAMERAS) {
-    g.save(); g.beginPath(); g.rect(c.x, c.y, c.w, c.h); g.clip(); drawFloor(g); g.restore();
+    g.save(); g.beginPath(); g.rect(c.x, c.y, c.w, c.h); g.clip(); drawFloor(g); drawPlants(g); g.restore();
     g.strokeStyle = '#4ADE80'; g.lineWidth = 3; g.strokeRect(c.x, c.y, c.w, c.h);
     g.fillStyle = '#4ADE80'; g.font = `700 16px ${FONT}`; g.fillText(c.name.toUpperCase(), c.x + 8, c.y + 22);
   }

@@ -77,9 +77,9 @@ export const WALLS = MAP.walls.flatMap((w) => cutDoors({ ...rect(w), glass: !!w.
 // Furniture that blocks movement. Two pieces of Lobby decor are left walkable, otherwise they would split the
 // Lobby (only ~86 map px tall) into two sealed halves with three spawn points on the far side:
 // the ring of chairs around the emergency table (its 26px tabletop still blocks), and the low coffee table.
-const WALKABLE_DECOR = [{ x: 536, y: 268, w: 48, h: 48 }, { x: 700, y: 284, w: 40, h: 18 },
-  // The green two-stool unit between the Toilets and the Lobby was removed from the art, so it has no collision either.
-  { x: 228, y: 262, w: 24, h: 60 }, { x: 233, y: 269, w: 14, h: 14 }, { x: 233, y: 301, w: 14, h: 14 }];
+// The two-stool unit between the Toilets and the Lobby was removed from the art; the tall planter that now
+// stands there (see taskIcons.js) keeps its collision box.
+const WALKABLE_DECOR = [{ x: 536, y: 268, w: 48, h: 48 }, { x: 700, y: 284, w: 40, h: 18 }];
 const sameRect = (a, b) => a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h;
 export const FURNITURE = MAP.obstacles.filter((o) => !WALKABLE_DECOR.some((d) => sameRect(o, d))).map(rect);
 

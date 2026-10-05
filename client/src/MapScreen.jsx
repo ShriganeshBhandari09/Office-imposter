@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { WORLD, TASKS, VENTS, SABOTAGE_FIX, ROOMS } from './shared/map.js';
 import { mapImage, mapIsReady } from './assets.js';
-import { drawObjects } from './taskIcons.js';
+import { drawObjects, drawPlants } from './taskIcons.js';
 
 // Numbered task tags sit just up and to the right of their object, like the reference map.
 const BADGE_OFFSET = { x: 14, y: -14 };
@@ -18,7 +18,7 @@ function drawOverview(g, w, h, dpr, { view, me, myTasks }) {
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   g.clearRect(0, 0, w, h);
   g.setTransform(s * dpr, 0, 0, s * dpr, ox * dpr, oy * dpr);
-  if (mapIsReady()) { g.drawImage(mapImage(), 0, 0, WORLD.w, WORLD.h); drawObjects(g); }
+  if (mapIsReady()) { g.drawImage(mapImage(), 0, 0, WORLD.w, WORLD.h); drawObjects(g); drawPlants(g); }
   g.textAlign = 'center'; g.textBaseline = 'middle';
 
   // Vents with their pair label.

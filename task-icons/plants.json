@@ -1,0 +1,126 @@
+{
+ "note": "Plants are drawn slightly from the side, so the pot sits at the bottom of the image. Place each icon with its bottom-centre (the pot base) at the listed x,y. Each PNG is 8x map size (1 map px = 8 image px); draw at sizeInMapPx * (worldWidth / 820). SVG versions scale to any size. Positions are in office-map.json coordinates (820 x 690).",
+ "icons": [
+  {
+   "name": "flower-pot",
+   "png": "flower-pot.png",
+   "svg": "flower-pot.svg",
+   "sizeInMapPx": {
+    "w": 16,
+    "h": 17
+   }
+  },
+  {
+   "name": "monstera",
+   "png": "monstera.png",
+   "svg": "monstera.svg",
+   "sizeInMapPx": {
+    "w": 26,
+    "h": 27
+   }
+  },
+  {
+   "name": "snake-plant",
+   "png": "snake-plant.png",
+   "svg": "snake-plant.svg",
+   "sizeInMapPx": {
+    "w": 16,
+    "h": 23
+   }
+  },
+  {
+   "name": "fern",
+   "png": "fern.png",
+   "svg": "fern.svg",
+   "sizeInMapPx": {
+    "w": 26,
+    "h": 25
+   }
+  },
+  {
+   "name": "succulent",
+   "png": "succulent.png",
+   "svg": "succulent.svg",
+   "sizeInMapPx": {
+    "w": 9,
+    "h": 10
+   }
+  },
+  {
+   "name": "planter-box-wide",
+   "png": "planter-box-wide.png",
+   "svg": "planter-box-wide.svg",
+   "sizeInMapPx": {
+    "w": 60,
+    "h": 26
+   }
+  },
+  {
+   "name": "planter-box-tall",
+   "png": "planter-box-tall.png",
+   "svg": "planter-box-tall.svg",
+   "sizeInMapPx": {
+    "w": 24,
+    "h": 56
+   }
+  }
+ ],
+ "onMap": [
+  {
+   "icon": "flower-pot",
+   "x": 362,
+   "y": 32,
+   "obstacleRadius": 6
+  },
+  {
+   "icon": "monstera",
+   "x": 790,
+   "y": 265,
+   "obstacleRadius": 7
+  },
+  {
+   "icon": "fern",
+   "x": 790,
+   "y": 333,
+   "obstacleRadius": 7
+  },
+  {
+   "icon": "snake-plant",
+   "x": 636,
+   "y": 462,
+   "obstacleRadius": 6
+  },
+  {
+   "icon": "flower-pot",
+   "x": 394,
+   "y": 39,
+   "obstacleRadius": 7
+  },
+  {
+   "icon": "monstera",
+   "x": 790,
+   "y": 229,
+   "obstacleRadius": 7
+  },
+  {
+   "icon": "fern",
+   "x": 390,
+   "y": 515,
+   "obstacleRadius": 7
+  },
+  {
+   "icon": "snake-plant",
+   "x": 30,
+   "y": 515,
+   "obstacleRadius": 7
+  },
+  {
+   "icon": "planter-box-tall",
+   "x": 240,
+   "y": 320,
+   "w": 24,
+   "h": 56,
+   "note": "central hall; x,y is bottom-centre"
+  }
+ ]
+}

@@ -49,6 +49,14 @@ export function saveLook(look) {
   try { storage()?.setItem('oi_look', JSON.stringify(look)); } catch { /* ignore */ }
 }
 
+// The rules the host last used, so hosting a new room (after "Back to title") keeps them instead of resetting.
+export function savedSettings() {
+  try { const s = JSON.parse(storage()?.getItem('oi_settings') || 'null'); return s && typeof s === 'object' ? s : null; } catch { return null; }
+}
+export function saveSettings(settings) {
+  try { storage()?.setItem('oi_settings', JSON.stringify(settings)); } catch { /* ignore */ }
+}
+
 // Sound levels (0-100) for the pause menu.
 export function savedSound() {
   try {

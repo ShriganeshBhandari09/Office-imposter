@@ -57,6 +57,20 @@ ok(host.view.settings.killCooldown === 30 && guest.view.settings.killCooldown ==
 host.s.emit('settings', { killCooldown: 60 }); await sleep(150);
 ok(host.view.settings.killCooldown === 30, 'settings cannot be changed once the game has started');
 
+// Hosting a new room with the saved rules (what "Back to title" then "Host game" does) keeps them
+{
+  const again = client('h');
+  await sleep(300);
+  const r = await again.emit('createRoom', { pid: 'h2', name: 'Again', color: 'cyan', hat: 'none', settings: { killCooldown: 45, tasksPerPlayer: 6, crewVision: 2, visualTasks: false, taskBarUpdates: 'never' } });
+  await sleep(200);
+  const st = again.view?.settings;
+  ok(r.ok && st.killCooldown === 45 && st.tasksPerPlayer === 6 && st.crewVision === 2 && st.visualTasks === false && st.taskBarUpdates === 'never', 'a new room starts with the rules the host saved');
+  const plain = client('p'); await sleep(300);
+  await plain.emit('createRoom', { pid: 'p1', name: 'Plain', color: 'cyan', hat: 'none' }); await sleep(200);
+  ok(plain.view?.settings.killCooldown === 25, 'a room hosted without saved rules still gets the defaults');
+  again.s.close(); plain.s.close();
+}
+
 host.s.close(); guest.s.close(); server.kill();
 console.log(failed ? `\n${failed} end-to-end check(s) failed.` : '\nAll end-to-end setting checks passed.');
 process.exit(failed ? 1 : 0);

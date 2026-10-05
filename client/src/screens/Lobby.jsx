@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { socket, emit, saveName, saveLook } from '../net.js';
+import { socket, emit, saveName, saveLook, saveSettings } from '../net.js';
 import { Button, Chip } from '../ui/kit.jsx';
 import Icon from '../ui/icons.jsx';
 import Robot from '../Robot.jsx';
@@ -21,6 +21,10 @@ export default function Lobby({ view, onLeave }) {
   const [text, setText] = useState('');
   const [err, setErr] = useState('');
   const [copied, setCopied] = useState(false);
+
+  // Remember the host's rules on this device, so the next room they host starts with the same ones.
+  const rulesKey = JSON.stringify(view.settings);
+  useEffect(() => { if (isHost) saveSettings(view.settings); }, [isHost, rulesKey]);
 
   // Taps, keys and walking all count as "here" so the server doesn't mark us AFK.
   useEffect(() => {

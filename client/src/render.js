@@ -11,6 +11,17 @@ const FONT = '"Chakra Petch", system-ui, sans-serif';
 const BODY_W = 40; // robot width in world units (height is 1.28x)
 
 let fogLayer = null;
+const FOG_SCALE = 0.5;
+
+// The vision shape only changes when the player moves (or a door/vision change), so a player standing still reuses it.
+let visCache = null;
+function cachedVisibility(x, y, r, occluders, key) {
+  const c = visCache;
+  if (c && c.key === key && Math.abs(c.x - x) < 0.5 && Math.abs(c.y - y) < 0.5 && Math.abs(c.r - r) < 0.5) return c.pts;
+  const pts = visibilityPolygon(x, y, r, occluders);
+  visCache = { x, y, r, key, pts };
+  return pts;
+}
 
 // The floor plan art, with a dark void behind it until it has loaded.
 function drawFloor(g) {
@@ -298,7 +309,8 @@ export function drawWorld(g, cw, ch, opts) {
   // Fog of war: an opaque layer with the visible area cut out, softened towards the vision edge.
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   if (vision) {
-    const W = Math.round(cw * dpr), H = Math.round(ch * dpr);
+    // The fog is soft, so it is drawn at half resolution: a quarter of the pixels to fill on a phone.
+    const W = Math.max(1, Math.round(cw * dpr * FOG_SCALE)), H = Math.max(1, Math.round(ch * dpr * FOG_SCALE));
     if (!fogLayer) fogLayer = document.createElement('canvas');
     if (fogLayer.width !== W || fogLayer.height !== H) { fogLayer.width = W; fogLayer.height = H; }
     const f = fogLayer.getContext('2d');
@@ -309,8 +321,9 @@ export function drawWorld(g, cw, ch, opts) {
     f.fillStyle = 'rgb(3,5,12)';
     f.fillRect(0, 0, W, H);
 
-    const pts = visibilityPolygon(me.x, me.y, vision, occluders);
-    f.setTransform(zoom * dpr, 0, 0, zoom * dpr, -camX * zoom * dpr, -camY * zoom * dpr);
+    const pts = cachedVisibility(me.x, me.y, vision, occluders, [...locked].sort().join(','));
+    const fs = zoom * dpr * FOG_SCALE;
+    f.setTransform(fs, 0, 0, fs, -camX * fs, -camY * fs);
     const light = f.createRadialGradient(me.x, me.y, vision * 0.7, me.x, me.y, vision);
     light.addColorStop(0, 'rgba(0,0,0,1)');
     light.addColorStop(1, 'rgba(0,0,0,0)');

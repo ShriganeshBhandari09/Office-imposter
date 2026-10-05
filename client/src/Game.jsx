@@ -136,7 +136,8 @@ export default function Game({ view, viewRef, onLeave }) {
     const loop = (t) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t;
       const v = viewRef.current;
-      const dpr = window.devicePixelRatio || 1;
+      // Phones report a pixel ratio of 3 or more, which is 9x the pixels to paint every frame for no visible gain.
+      const dpr = Math.min(window.devicePixelRatio || 1, IS_TOUCH ? 1.5 : 2);
       const cw = window.innerWidth, ch = window.innerHeight;
       // Phones often have a fractional pixel ratio; round so the canvas isn't reallocated every frame.
       const pw = Math.round(cw * dpr), ph = Math.round(ch * dpr);

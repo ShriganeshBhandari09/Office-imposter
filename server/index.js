@@ -87,7 +87,7 @@ io.on('connection', (socket) => {
     fn(g, info().pid, ...args);
   });
 
-  socket.on('createRoom', ({ pid, name, color, hat, roomName } = {}, cb) => {
+  socket.on('createRoom', ({ pid, name, color, hat, roomName, settings } = {}, cb) => {
     pid = cleanPid(pid);
     if (!pid) return reply(cb, { error: 'Missing player id.' });
     if (!String(name || '').trim()) return reply(cb, { error: 'Enter a name first.' });
@@ -96,6 +96,8 @@ io.on('connection', (socket) => {
     rooms.set(code, { game: new Game(cleanRoomName(roomName, name)), emptySince: 0 });
     const res = enterRoom(socket, code, pid, name, color, hat);
     if (!res.ok) rooms.delete(code);
+    // The host's last rules come back with them, so a new room does not start from the defaults again.
+    else if (settings && typeof settings === 'object') rooms.get(code).game.updateSettings(pid, settings);
     reply(cb, res);
   });
 

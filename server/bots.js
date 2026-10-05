@@ -22,7 +22,7 @@ export function botName(taken) {
 
 // ---------- Path finding on a coarse grid ----------
 
-const CELL = 5;
+const CELL = 10;
 const GW = Math.ceil(WORLD.w / CELL), GH = Math.ceil(WORLD.h / CELL);
 const STATIC = obstaclesFor([]);
 const OPEN = new Uint8Array(GW * GH);
@@ -35,18 +35,18 @@ const center = (i) => ({ x: (i % GW) * CELL + CELL / 2, y: Math.floor(i / GW) * 
 
 function nearestOpen(x, y) {
   const cx = clamp(Math.floor(x / CELL), 0, GW - 1), cy = clamp(Math.floor(y / CELL), 0, GH - 1);
-  for (let r = 0; r < 40; r++) {
+  if (OPEN[cy * GW + cx]) return cy * GW + cx;
+  for (let r = 1; r < 40; r++) {
     let best = -1, bd = Infinity;
-    for (let gy = cy - r; gy <= cy + r; gy++) {
-      for (let gx = cx - r; gx <= cx + r; gx++) {
-        if (gx < 0 || gy < 0 || gx >= GW || gy >= GH) continue;
-        if (Math.max(Math.abs(gx - cx), Math.abs(gy - cy)) !== r) continue;
-        const i = gy * GW + gx;
-        if (!OPEN[i]) continue;
-        const c = center(i), d = Math.hypot(c.x - x, c.y - y);
-        if (d < bd) { bd = d; best = i; }
-      }
-    }
+    const visit = (gx, gy) => {
+      if (gx < 0 || gy < 0 || gx >= GW || gy >= GH) return;
+      const i = gy * GW + gx;
+      if (!OPEN[i]) return;
+      const c = center(i), d = Math.hypot(c.x - x, c.y - y);
+      if (d < bd) { bd = d; best = i; }
+    };
+    for (let k = -r; k <= r; k++) { visit(cx + k, cy - r); visit(cx + k, cy + r); }
+    for (let k = -r + 1; k <= r - 1; k++) { visit(cx - r, cy + k); visit(cx + r, cy + k); }
     if (best >= 0) return best;
   }
   return -1;
@@ -54,7 +54,7 @@ function nearestOpen(x, y) {
 
 // True if a player can walk the straight line from a to b without touching furniture or walls.
 function clearLine(a, b) {
-  const d = dist(a, b), n = Math.ceil(d / 4);
+  const d = dist(a, b), n = Math.ceil(d / 8);
   for (let i = 1; i <= n; i++) {
     if (collides(a.x + ((b.x - a.x) * i) / n, a.y + ((b.y - a.y) * i) / n, STATIC, PLAYER_R)) return false;
   }
@@ -70,7 +70,8 @@ function findPath(from, to) {
   const came = new Int32Array(N).fill(-1);
   const done = new Uint8Array(N);
   const gc = center(g);
-  const h = (i) => { const c = center(i); return Math.hypot(c.x - gc.x, c.y - gc.y) / CELL; };
+  const gx0 = g % GW, gy0 = Math.floor(g / GW);
+  const h = (i) => Math.hypot((i % GW) - gx0, Math.floor(i / GW) - gy0);
   const heap = [[h(s), s]];
   const push = (e) => {
     heap.push(e);
@@ -118,7 +119,7 @@ function findPath(from, to) {
   if (clearLine(cells[cells.length - 1], to)) pts.push({ x: to.x, y: to.y });
   const out = [];
   for (let i = 0; i < pts.length - 1;) {
-    let j = Math.min(pts.length - 1, i + 40);
+    let j = Math.min(pts.length - 1, i + 24);
     while (j > i + 1 && !clearLine(pts[i], pts[j])) j--;
     out.push(pts[j]);
     i = j;
@@ -187,12 +188,18 @@ function newBrain(p, t, game) {
 
 export function resetBrain(p) { p.brain = null; }
 
+// Path finding is the most expensive thing the server does, so at most one new path is worked out per tick;
+// a bot that misses out simply asks again on the next tick (50 ms later).
+let pathBudget = 1;
+
 function goTo(p, b, x, y, kind, id, reach = 24, replanMs = 0, t = 0) {
   const same = b.goal && b.goal.kind === kind && b.goal.id === id;
   if (same && b.path && !(replanMs && t - b.goal.at > replanMs)) {
     b.goal.x = x; b.goal.y = y;
     return;
   }
+  if (pathBudget <= 0) return;
+  pathBudget--;
   b.goal = { x, y, kind, id, reach, at: t };
   b.blockedSince = 0;
   // Ghosts float straight through everything.
@@ -504,6 +511,7 @@ function lobbyThink(game, p, b, t, dt) {
 }
 
 export function botsTick(game, t, dt) {
+  pathBudget = 1;
   for (const p of game.players.values()) {
     if (!p.bot) continue;
     const b = p.brain || (p.brain = newBrain(p, t, game));

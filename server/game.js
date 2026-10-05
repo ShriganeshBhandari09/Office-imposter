@@ -249,7 +249,8 @@ export class Game {
       p.alive = true;
       p.role = impostorIds.has(p.id) ? 'impostor' : 'crew';
       p.tasks = shuffle(TASKS).slice(0, settings.tasksPerPlayer).map((task) => ({ id: task.id, done: false }));
-      p.killCdUntil = t + 15000;
+      // The first kill waits out the role reveal and then one full cooldown, like every kill after it.
+      p.killCdUntil = t + 5000 + settings.killCooldown * 1000;
       p.emergencyLeft = settings.emergencyPerPlayer;
       p.inVent = null;
       p.killAnim = null;

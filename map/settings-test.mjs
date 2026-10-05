@@ -61,6 +61,36 @@ for (const k of Object.keys(SETTING_SPECS)) {
   ok(imp.killCdUntil - Date.now() > 33000 && imp.killCdUntil - Date.now() <= 35000, 'kill cooldown follows the setting (35s)');
 }
 
+// Kill cooldown over a whole game, on a fake clock
+{
+  const base = Date.now(); let fakeNow = base; const realNow = Date.now; Date.now = () => fakeNow;
+  const g = started({ killCooldown: 20, discussionSeconds: 0, votingSeconds: 15 });
+  const imp = impOf(g); const crew = [...g.players.values()].filter((p) => p.role === 'crew');
+  const near = (v) => { at(imp, { x: 400, y: 300 }); at(v, { x: 410, y: 300 }); imp.lastMoveAt = fakeNow; };
+  near(crew[0]);
+  ok(imp.killCdUntil - base === 5000 + 20000, 'first kill: role reveal plus one full cooldown (25s for a 20s setting)');
+  g.kill(imp.id, crew[0].id); ok(crew[0].alive, 'cooldown: a kill before the first cooldown ends is refused');
+  fakeNow = base + 24000; g.kill(imp.id, crew[0].id); ok(crew[0].alive, 'cooldown: still refused 1s before it ends');
+  fakeNow = base + 25100; imp.lastMoveAt = fakeNow; near(crew[0]); g.kill(imp.id, crew[0].id);
+  ok(!crew[0].alive, 'cooldown: the kill works once the cooldown has run out');
+  ok(imp.killCdUntil - fakeNow === 20000, 'cooldown: it restarts at the full setting (20s) after a kill');
+  near(crew[1]); g.kill(imp.id, crew[1].id); ok(crew[1].alive, 'cooldown: a second kill straight away is refused');
+  const left = g.viewFor(imp.id).me.killCdLeft; ok(left >= 19 && left <= 20, `cooldown: the impostor's button shows the time left (${left}s)`);
+  fakeNow += 20100; imp.lastMoveAt = fakeNow; near(crew[1]); g.kill(imp.id, crew[1].id); ok(!crew[1].alive, 'cooldown: and works again after waiting it out');
+  // A meeting restarts the cooldown at the full setting
+  const caller = [...g.players.values()].find((p) => p.role === 'crew' && p.alive);
+  if (caller) {
+    g.emergencyReadyAt = 0; at(caller, { x: EMERGENCY_BUTTON.x + 40, y: EMERGENCY_BUTTON.y });
+    g.emergency(caller.id); g.meeting.introEndsAt = fakeNow - 1; g.meeting.discussEndsAt = fakeNow - 1;
+    for (const p of g.alive()) g.vote(p.id, 'skip');
+    if (g.meeting) g.endMeeting();
+    ok(g.phase === 'ejection', 'cooldown: the meeting ended in the ejection screen');
+    fakeNow += 8600; g.afterEjection();
+    ok(g.phase === 'playing' && imp.killCdUntil - fakeNow === 20000, 'cooldown: back on the map it restarts at the full setting (20s)');
+  }
+  Date.now = realNow;
+}
+
 // Emergency meetings per player and cooldown
 {
   const g = started({ emergencyPerPlayer: 0 });

@@ -71,7 +71,13 @@ export default function LobbyScene({ view, onTerminal }) {
       }
       const L = local.current;
       if (v?.me) {
-        if (v.me.tpSeq !== L.lastTp) { L.x = v.me.x; L.y = v.me.y; L.lastTp = v.me.tpSeq; }
+        if (v.me.tpSeq !== L.lastTp) {
+          L.x = v.me.x; L.y = v.me.y; L.lastTp = v.me.tpSeq;
+          // Coming back from Customize (this scene starts over) you are still standing on the terminal. Count that as
+          // already inside, so it only opens again once you walk off and back on.
+          const T0 = LOBBY.terminal;
+          L.inTerm = L.x > T0.x && L.x < T0.x + T0.w && L.y > T0.y && L.y < T0.y + T0.h;
+        }
         // Walk.
         const k = keys.current;
         let dx = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0);

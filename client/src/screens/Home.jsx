@@ -4,7 +4,7 @@ import { Button, Modal, Slider } from '../ui/kit.jsx';
 import Icon from '../ui/icons.jsx';
 import { MAP_ART_URL } from '../assets.js';
 import { useFullscreenOnTap } from '../hooks.js';
-import { emit, savedName, saveName, savedLook, savedSound, saveSound } from '../net.js';
+import { emit, savedName, saveName, savedLook, savedSound, saveSound, savedSettings } from '../net.js';
 import { setVolumes } from '../audio.js';
 
 const LINEUP = [
@@ -65,7 +65,7 @@ export default function Home({ onJoin, onAvatar, error }) {
       <section className="hm-card">
         <input id="home-name" className="ui-input" maxLength={14} value={name} placeholder="Your name" aria-label="Your name" autoComplete="off"
           onChange={(e) => { setName(e.target.value); setErr(''); }} />
-        <Button variant="primary" size="xl" icon="home" className="home-host" onClick={() => go('createRoom', { ...look })}>Host game</Button>
+        <Button variant="primary" size="xl" icon="home" className="home-host" onClick={() => go('createRoom', { ...look, settings: savedSettings() })}>Host game</Button>
         <div className="hm-or"><span>or join</span></div>
         <form className="home-join" onSubmit={(e) => { e.preventDefault(); if (code.length < 4) setErr('Enter the room code from the host.'); else go('join', { code, ...look }); }}>
           <input className="ui-input code" maxLength={5} value={code} placeholder="ROOM CODE" aria-label="Room code" autoComplete="off"

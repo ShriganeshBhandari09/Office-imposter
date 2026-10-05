@@ -9,8 +9,7 @@
 .chat-msg p { display: inline-block; margin-top: 3px; padding: 8px 12px; border-radius: 12px; background: var(--surface-300); font-size: 15px; word-break: break-word; max-width: 100%; }
 
 /* ---------- Line-up: role reveal and game over (Among Us style V) ---------- */
-.lineup { --gap: min(calc(var(--lu-h) * .42), calc(44vw / var(--steps))); position: relative; flex: none; width: 100%; height: var(--lu-h); margin-top: auto; }
-.lineup-glow { position: absolute; left: 50%; bottom: -12%; width: min(1500px, 140vw); height: 130%; transform: translateX(-50%); background: radial-gradient(ellipse 45% 55% at 50% 100%, var(--glow), transparent 72%); pointer-events: none; }
+.lineup { --gap: min(calc(var(--lu-h) * .42), calc(44vw / var(--steps))); position: relative; flex: none; width: 100%; height: var(--lu-h); margin-top: clamp(10px, 5vh, 50px); }
 .lu { position: absolute; left: calc(50% + var(--side) * var(--step) * var(--gap)); bottom: calc(var(--lu-h) * (.04 + var(--step) * .045)); margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px;
   transform: translateX(-50%) scale(calc(1 - var(--step) * .09)); transform-origin: 50% 100%; filter: brightness(calc(1 - var(--step) * .1)); }
 .lu .robot { height: calc(var(--lu-h) * .72) !important; width: auto !important; max-width: none; }
@@ -19,8 +18,8 @@
 .lu.dead .robot { opacity: .45; }
 
 /* ---------- Role reveal ---------- */
-.reveal { --lu-h: 34vh; --glow: rgba(41,211,230,.5); --lead: var(--cyan-500); background: #000; justify-content: flex-start; padding: clamp(14px, 6vh, 70px) 0 clamp(48px, 10vh, 100px); }
-.reveal.imp { --glow: rgba(229,72,77,.55); --lead: var(--red-300); }
+.reveal { --lu-h: 34vh; --lead: var(--cyan-500); background: #000; justify-content: center; padding: 10px 0 clamp(48px, 10vh, 100px); }
+.reveal.imp { --lead: var(--red-300); }
 .reveal h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(48px, 15vh, 170px); line-height: 1; text-transform: uppercase; color: var(--cyan-500); text-shadow: 0 0 46px rgba(56,225,255,.55); }
 .reveal.imp h1 { color: var(--red-500); text-shadow: 0 0 46px rgba(255,61,90,.6); }
 .reveal-sub { margin-top: clamp(4px, 1.6vh, 18px); font-size: clamp(14px, 3vh, 28px); font-weight: 600; color: #fff; padding: 0 16px; }
@@ -94,8 +93,8 @@
 .ghost-chat .chat-form .send { background: var(--ghost-500); }
 
 /* ---------- Game over: Victory / Defeat, one screen, no scrolling ---------- */
-.over { --lu-h: 32vh; --glow: rgba(41,211,230,.5); --lead: var(--cyan-500); background: #000; justify-content: flex-start; padding: clamp(12px, 5vh, 60px) 0 clamp(10px, 3vh, 30px); }
-.over.imp { --glow: rgba(229,72,77,.55); --lead: var(--red-300); }
+.over { --lu-h: 32vh; --lead: var(--cyan-500); background: #000; justify-content: center; padding: 10px 0; }
+.over.imp { --lead: var(--red-300); }
 .over h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(52px, 16vh, 180px); line-height: 1; text-transform: uppercase; color: #4DA3FF; text-shadow: 0 0 50px rgba(77,163,255,.55); }
 .over.lost h1 { color: var(--red-500); text-shadow: 0 0 50px rgba(255,61,90,.55); }
 .over-reason { margin-top: clamp(4px, 1.4vh, 16px); font-size: clamp(13px, 2.6vh, 24px); font-weight: 600; color: #fff; padding: 0 16px; max-width: 46em; }

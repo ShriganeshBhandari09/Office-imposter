@@ -8,7 +8,6 @@ export default function Lineup({ players, leadId, eyes }) {
   const steps = Math.max(1, Math.ceil((slots.length - 1) / 2));
   return (
     <div className="lineup" style={{ '--steps': steps }}>
-      <div className="lineup-glow" />
       {slots.map((p, i) => {
         const step = Math.ceil(i / 2);
         const side = i === 0 ? 0 : i % 2 ? -1 : 1;

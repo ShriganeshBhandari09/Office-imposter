@@ -121,6 +121,20 @@
    "w": 24,
    "h": 56,
    "note": "central hall; x,y is bottom-centre"
+  },
+  {
+   "icon": "monstera",
+   "x": 320,
+   "y": 423,
+   "obstacleRadius": 9,
+   "note": "Den; replaces the round pouf in the art"
+  },
+  {
+   "icon": "flower-pot",
+   "x": 300,
+   "y": 465,
+   "task": 9,
+   "note": "Den; the Water the plant task object"
   }
  ]
 }

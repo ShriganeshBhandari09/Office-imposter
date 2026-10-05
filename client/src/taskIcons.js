@@ -15,6 +15,8 @@ const entries = ICONS.map((i) => ({ ...i, img: null, hi: null }));
 export const plants = PLANTS.map((p) => ({
   ...p, img: null, x: p.x * MAP_SCALE, y: p.y * MAP_SCALE, w: p.w * MAP_SCALE, h: p.h * MAP_SCALE,
 }));
+// A task whose object is a plant (Water the plant) shows the plant instead of its flat icon, and glows around it.
+const taskPlant = new Map(plants.filter((p) => p.task).map((p) => [p.task, p]));
 let loading = null;
 let layer = null;
 
@@ -54,7 +56,7 @@ function build() {
   const g = c.getContext('2d');
   g.scale(SCALE, SCALE);
   g.imageSmoothingQuality = 'high';
-  for (const e of entries) if (e.img) for (const s of e.spots) drawOne(g, e.img, s, e.w, e.h, PAD);
+  for (const e of entries) if (e.img && !(e.kind === 'task' && taskPlant.has(e.key))) for (const s of e.spots) drawOne(g, e.img, s, e.w, e.h, PAD);
   return c;
 }
 
@@ -73,7 +75,10 @@ export function drawHighlights(g, taskNums, devices, t = 0) {
   g.globalAlpha = pulse;
   for (const e of entries) {
     const on = e.kind === 'task' ? taskNums.has(e.key) : devices.has(e.key);
-    if (on && e.hi) for (const s of e.spots) drawOne(g, e.hi, s, e.w, e.h, PAD_HI);
+    if (!on) continue;
+    const plant = e.kind === 'task' && taskPlant.get(e.key);
+    if (plant) drawPlantGlow(g, plant);
+    else if (e.hi) for (const s of e.spots) drawOne(g, e.hi, s, e.w, e.h, PAD_HI);
   }
   g.restore();
 }
@@ -85,4 +90,13 @@ export function drawPlant(g, p) {
 // Every plant at once, for views without players (the map screen).
 export function drawPlants(g) {
   for (const p of plants) drawPlant(g, p);
+}
+
+// The task glow for a plant: the design's yellow highlight, as a soft halo around the plant's outline.
+function drawPlantGlow(g, p) {
+  if (!p.img) return;
+  g.save();
+  g.shadowColor = '#FFC83D';
+  for (const blur of [4, 14]) { g.shadowBlur = blur; drawPlant(g, p); }
+  g.restore();
 }

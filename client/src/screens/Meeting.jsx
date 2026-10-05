@@ -30,7 +30,7 @@ function Splash({ view }) {
 }
 
 // One player in the vote grid (foundation: components/VoteCard).
-function VoteCard({ r, you, caller, voted, selected, mine, disabled, onSelect }) {
+function VoteCard({ r, you, caller, voted, selected, mine, disabled, onSelect, onConfirm, onCancel }) {
   const dead = !r.alive;
   return (
     <div className={`vote-card ${dead ? 'dead' : ''} ${selected ? 'sel' : ''} ${mine ? 'mine' : ''}`}>
@@ -40,6 +40,12 @@ function VoteCard({ r, you, caller, voted, selected, mine, disabled, onSelect })
           {dead ? <small className="bad">Dead</small> : you ? <small className="you">You</small> : caller ? <small className="rep">Reported</small> : null}
         </span>
       </button>
+      {selected && (
+        <div className="vc-actions">
+          <button type="button" aria-label={`Vote ${r.name}`} onClick={onConfirm}><Icon name="check" size={22} /></button>
+          <button type="button" className="no" aria-label="Cancel" onClick={onCancel}><Icon name="close" size={22} /></button>
+        </div>
+      )}
       {voted && !dead && <Chip kind="voted">Voted</Chip>}
     </div>
   );
@@ -91,18 +97,20 @@ export function Meeting({ view }) {
               {view.roster.map((r) => (
                 <VoteCard key={r.id} r={r} you={r.id === me.id} caller={r.id === m.callerId} voted={voted.has(r.id)}
                   selected={sel === r.id && canVote} mine={m.myVote === r.id} disabled={!canVote}
-                  onSelect={setSel} />
+                  onSelect={setSel} onConfirm={() => vote(r.id)} onCancel={() => setSel(null)} />
               ))}
             </div>
             <footer className="mp-foot">
               <div className="mp-actions">
-                {canVote && sel && (
+                {canVote && sel === 'skip' ? (
                   <>
-                    <Button variant="start" size="md" icon="check" onClick={() => vote(sel)}>Vote {view.roster.find((r) => r.id === sel)?.name}</Button>
+                    <span className="mp-confirm">Skip your vote?</span>
+                    <Button variant="start" size="md" icon="check" onClick={() => vote('skip')}>Yes, skip</Button>
                     <Button size="md" icon="close" aria-label="Cancel" onClick={() => setSel(null)} />
                   </>
+                ) : (
+                  <Button size="md" disabled={!canVote} onClick={() => setSel('skip')}>{m.myVote === 'skip' ? 'Skipped' : 'Skip vote'}</Button>
                 )}
-                <Button size="md" disabled={!canVote} onClick={() => vote('skip')}>{m.myVote === 'skip' ? 'Skipped' : 'Skip vote'}</Button>
               </div>
               <span className="mp-hint">{hint}</span>
             </footer>

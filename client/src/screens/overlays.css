@@ -182,3 +182,4 @@
 .mp-hint { min-width: 0; text-align: right; }
 .vote-card.mine { border-color: var(--cyan-500); }
 .vote-card .ui-chip.voted { top: -8px; right: 10px; margin-top: 0; font-size: 10px; padding: 2px 8px; }
+.mp-confirm { font-weight: 700; color: var(--ink); white-space: nowrap; }

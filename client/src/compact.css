@@ -145,21 +145,13 @@
   .ghost-note { font-size: 11px; padding: 8px; }
 
   /* ----- Full-screen moments ----- */
-  .reveal-kicker { font-size: 9px; }
-  .reveal h1 { font-size: clamp(28px, 14vh, 64px); text-shadow: 0 0 24px rgba(56,225,255,.5); }
-  .reveal-sub { font-size: 11px; }
-  .reveal figure .robot { height: 28vh !important; max-height: 120px; } .reveal figure.you .robot { height: 36vh !important; max-height: 150px; }
-  .reveal figcaption { font-size: 10px; }
-  .elim h1 { font-size: clamp(26px, 11vh, 52px); } .elim-sub { font-size: 11px; } .elim-note { font-size: 10px; }
+  .reveal { padding: 8px 0 44px; } .over { padding: 8px 0 8px; --lu-h: 36vh; }
+  .reveal h1 { font-size: clamp(34px, 15vh, 72px); text-shadow: 0 0 24px rgba(56,225,255,.5); }
+  .over h1 { font-size: clamp(36px, 16vh, 80px); }
+  .reveal-sub, .over-reason { font-size: clamp(11px, 3.4vh, 15px); margin-top: 2px; }
+  .lu figcaption { font-size: clamp(10px, 3vh, 14px); }
+  .over-actions { gap: 12px; margin-top: 6px; } .over-actions .ui-btn { min-height: 40px; font-size: 15px; padding: 0 22px; }
+  .reveal-pill { bottom: 6px; padding: 3px 14px 3px 5px; }
   .eject-text h1 { font-size: clamp(22px, 10vh, 44px); } .eject-text h2 { font-size: 13px; } .eject-text p { font-size: 13px; } .tally { font-size: 11px; }
-  /* Game over fills the phone screen; the match stats are left out to make room. */
-  .over { justify-content: center; gap: clamp(6px, 2.4vh, 14px); padding-top: 10px; }
-  .over h1 { font-size: clamp(44px, 19vh, 92px); text-shadow: 0 5px 0 #0F5B70; } .over.imp h1 { text-shadow: 0 5px 0 #5A0A18; }
-  .over-kicker { font-size: 13px; } .over-reason { font-size: 17px; }
-  .over-lineup { gap: clamp(14px, 3vw, 28px); margin-top: 6px; } .over-lineup li { gap: 5px; }
-  .over-lineup .robot { width: clamp(60px, 21vh, 104px) !important; height: auto !important; }
-  .over-lineup b { font-size: 16px; } .over-lineup .role { font-size: 11px; padding: 3px 10px; }
-  .over-stats { display: none; }
-  .over-actions { gap: 14px; margin-top: 12px; } .over-actions .ui-btn { min-height: 52px; font-size: 19px; padding: 0 30px; }
   .kill-text { font-size: 18px; }
 }

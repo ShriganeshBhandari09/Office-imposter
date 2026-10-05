@@ -1,6 +1,6 @@
-/* Full-screen moments: role reveal, meeting, ejection, eliminated, ghost mode, game over, kill cutscene. */
-.reveal, .meeting-wrap, .eject, .elim, .over { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; text-align: center; overflow: hidden; }
-.reveal { z-index: 25; } .meeting-wrap { z-index: 30; } .eject { z-index: 32; } .elim { z-index: 28; } .over { z-index: 34; }
+/* Full-screen moments: role reveal, meeting, ejection, ghost mode, game over, kill cutscene. */
+.reveal, .meeting-wrap, .eject, .over { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; text-align: center; overflow: hidden; }
+.reveal { z-index: 25; } .meeting-wrap { z-index: 30; } .eject { z-index: 32; } .over { z-index: 34; }
 .chat-form { position: relative; }
 .chat-form .ui-input { height: 48px; font-size: 16px; padding-right: 58px; }
 .chat-form .send { position: absolute; right: 6px; top: 6px; width: 36px; height: 36px; border: 0; border-radius: 9px; background: var(--cyan-500); color: var(--cyan-ink); display: grid; place-items: center; padding: 0; }
@@ -8,21 +8,25 @@
 .chat-msg b { display: block; font-size: 13px; font-weight: 700; }
 .chat-msg p { display: inline-block; margin-top: 3px; padding: 8px 12px; border-radius: 12px; background: var(--surface-300); font-size: 15px; word-break: break-word; max-width: 100%; }
 
+/* ---------- Line-up: role reveal and game over (Among Us style V) ---------- */
+.lineup { --gap: min(calc(var(--lu-h) * .42), calc(44vw / var(--steps))); position: relative; flex: none; width: 100%; height: var(--lu-h); margin-top: auto; }
+.lineup-glow { position: absolute; left: 50%; bottom: -12%; width: min(1500px, 140vw); height: 130%; transform: translateX(-50%); background: radial-gradient(ellipse 45% 55% at 50% 100%, var(--glow), transparent 72%); pointer-events: none; }
+.lu { position: absolute; left: calc(50% + var(--side) * var(--step) * var(--gap)); bottom: calc(var(--lu-h) * (.04 + var(--step) * .045)); margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  transform: translateX(-50%) scale(calc(1 - var(--step) * .09)); transform-origin: 50% 100%; filter: brightness(calc(1 - var(--step) * .1)); }
+.lu .robot { height: calc(var(--lu-h) * .72) !important; width: auto !important; max-width: none; }
+.lu figcaption { font-weight: 700; font-size: clamp(13px, 2.4vh, 22px); color: #fff; white-space: nowrap; text-shadow: 0 2px 4px #000; }
+.lu.lead figcaption { color: var(--lead); }
+.lu.dead .robot { opacity: .45; }
+
 /* ---------- Role reveal ---------- */
-.reveal { background: radial-gradient(ellipse at 50% 38%, #08122A, #03050C 70%); justify-content: flex-start; padding-top: clamp(14px, 7vh, 80px); }
-.reveal-kicker { font-size: clamp(12px, 1.6vw, 20px); font-weight: 700; letter-spacing: .5em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 4px; }
-.reveal h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(54px, 13vw, 190px); line-height: 1; text-transform: uppercase; color: var(--cyan-500); text-shadow: 0 0 46px rgba(56,225,255,.6); }
+.reveal { --lu-h: 34vh; --glow: rgba(41,211,230,.5); --lead: var(--cyan-500); background: #000; justify-content: flex-start; padding: clamp(14px, 6vh, 70px) 0 clamp(48px, 10vh, 100px); }
+.reveal.imp { --glow: rgba(229,72,77,.55); --lead: var(--red-300); }
+.reveal h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(48px, 15vh, 170px); line-height: 1; text-transform: uppercase; color: var(--cyan-500); text-shadow: 0 0 46px rgba(56,225,255,.55); }
 .reveal.imp h1 { color: var(--red-500); text-shadow: 0 0 46px rgba(255,61,90,.6); }
-.reveal-sub { margin-top: clamp(6px, 2vh, 26px); font-size: clamp(14px, 1.9vw, 24px); color: var(--ink-muted); max-width: 36em; padding: 0 16px; }
-.reveal-stage { position: absolute; left: 0; right: 0; bottom: clamp(60px, 14vh, 130px); display: flex; justify-content: center; align-items: flex-end; gap: clamp(16px, 4vw, 70px); }
-.reveal-platform { position: absolute; left: 50%; bottom: -26px; width: min(1250px, 88vw); height: 120px; transform: translateX(-50%); border-radius: 50%; background: #0A1B2A; }
-.reveal.imp .reveal-platform { background: #2A0A14; }
-.reveal figure { position: relative; margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.reveal figcaption { font-weight: 700; font-size: clamp(12px, 1.4vw, 18px); color: var(--ink-soft); }
-.reveal figure.you figcaption { color: var(--cyan-500); } .reveal.imp figure.you figcaption { color: var(--red-300); }
-.reveal figure .robot { max-width: 18vw; height: auto !important; }
-.reveal-pill { position: absolute; bottom: clamp(10px, 3vh, 30px); display: flex; align-items: center; gap: 14px; padding: 8px 22px 8px 10px; border-radius: 14px; border: 1.5px solid var(--line-200); background: var(--surface-200); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: clamp(12px, 1.3vw, 17px); }
-.reveal-pill i { width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--cyan-500); display: grid; place-items: center; font-style: normal; font-family: var(--font-display); font-size: 20px; color: var(--cyan-500); }
+.reveal-sub { margin-top: clamp(4px, 1.6vh, 18px); font-size: clamp(14px, 3vh, 28px); font-weight: 600; color: #fff; padding: 0 16px; }
+.reveal-sub em, .over-reason em { font-style: normal; font-weight: 700; color: var(--red-300); }
+.reveal-pill { position: absolute; bottom: clamp(8px, 2.6vh, 28px); display: flex; align-items: center; gap: 12px; padding: 6px 20px 6px 8px; border-radius: 14px; border: 1.5px solid var(--line-200); background: var(--surface-200); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: clamp(11px, 2vh, 16px); }
+.reveal-pill i { width: clamp(24px, 5vh, 38px); height: clamp(24px, 5vh, 38px); border-radius: 50%; border: 3px solid var(--cyan-500); display: grid; place-items: center; font-style: normal; font-family: var(--font-display); font-size: clamp(12px, 2.4vh, 19px); color: var(--cyan-500); }
 
 /* ---------- Meeting ---------- */
 .meeting-wrap { justify-content: center; background: rgba(3,5,12,.9); padding: 12px; }
@@ -79,17 +83,6 @@
 @keyframes caret-blink { 50% { opacity: 0; } }
 .fade { opacity: 0; transition: opacity .6s; } .fade.in { opacity: 1; }
 
-/* ---------- Eliminated ---------- */
-.elim { justify-content: flex-start; padding-top: clamp(10px, 4vh, 50px); background: radial-gradient(ellipse at 50% 60%, #1B0510, #050208 75%); }
-.elim h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(34px, 8.4vw, 118px); line-height: 1; text-transform: uppercase; color: var(--red-500); text-shadow: 0 6px 0 #5A0A18; padding: 0 12px; }
-.elim-sub { margin-top: clamp(6px, 1.6vh, 18px); color: #FFD3DA; font-weight: 600; font-size: clamp(14px, 1.8vw, 22px); }
-.elim-stage { position: relative; width: min(1100px, 92vw); flex: 1; min-height: 0; margin-top: 2vh; }
-.elim-band { position: absolute; left: -100vw; right: -100vw; top: 25%; height: 46%; transform: skewY(-6deg); background: linear-gradient(180deg, transparent, rgba(138,15,36,.55) 30%, rgba(138,15,36,.55) 70%, transparent); }
-.elim-killer { position: absolute; left: 12%; top: 18%; max-height: 46vh; width: auto !important; transform: rotate(-4deg); }
-.elim-body { position: absolute; right: 12%; bottom: 14%; max-height: 28vh; width: auto !important; }
-.elim-note { color: var(--ink-muted); font-size: clamp(13px, 1.5vw, 18px); margin-bottom: 10px; }
-.elim-btn { background: #fff !important; color: #5A0A18 !important; border-color: transparent !important; box-shadow: 0 5px 0 #B9A8AD !important; margin-bottom: clamp(10px, 3vh, 40px); }
-
 /* ---------- Ghost mode ---------- */
 .ghost-banner { position: absolute; left: 50%; top: 18px; transform: translateX(-50%); z-index: 7; width: min(760px, 56vw); padding: 12px 22px; text-align: center; border-radius: 14px; border: 2px solid var(--ghost-500); background: rgba(15,22,48,.94); pointer-events: none; animation: tp-in .3s; }
 .ghost-banner h2 { font-family: var(--font-display); font-weight: 400; font-size: 26px; text-transform: uppercase; color: var(--ghost-300); }
@@ -100,24 +93,13 @@
 .ghost-chat .chat-form { padding: 10px; border-top: 1px solid var(--line-100); }
 .ghost-chat .chat-form .send { background: var(--ghost-500); }
 
-/* ---------- Game over ---------- */
-.over { justify-content: center; gap: clamp(8px, 2vh, 22px); background: radial-gradient(ellipse at 50% 0%, #0F2A3B, #050A18 72%); }
-.over.imp { background: radial-gradient(ellipse at 50% 0%, #3A0A14, #0A0508 72%); }
-.over-kicker { font-size: clamp(12px, 1.6vw, 20px); font-weight: 700; letter-spacing: .5em; text-transform: uppercase; color: var(--ink-dim); }
-.over h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(38px, 10vw, 150px); line-height: 1; text-transform: uppercase; color: var(--cyan-500); text-shadow: 0 8px 0 #0F5B70; }
-.over.imp h1 { color: var(--red-500); text-shadow: 0 8px 0 #5A0A18; }
-.over-reason { font-size: clamp(14px, 2vw, 26px); color: var(--ink-muted); }
-.over-lineup { list-style: none; margin: clamp(4px, 2vh, 20px) 0 0; padding: 0 16px; display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(10px, 2.4vw, 34px); }
-.over-lineup li { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.over-lineup li.dead .robot { opacity: .45; }
-.over-lineup b { font-size: clamp(13px, 1.4vw, 18px); }
-.over-lineup .role { padding: 2px 10px; border-radius: 6px; background: var(--surface-400); color: var(--ink-muted); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-.over-lineup .role.imp { background: var(--red-500); color: #fff; }
-.over-stats { display: flex; gap: 14px; margin-top: clamp(4px, 2vh, 20px); }
-.over-stats div { min-width: clamp(110px, 18vw, 230px); padding: 12px 18px; border-radius: var(--radius-md); border: 2px solid var(--line-200); background: var(--surface-200); text-align: left; }
-.over-stats small { display: block; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-dim); }
-.over-stats b { font-family: var(--font-display); font-weight: 400; font-size: clamp(20px, 2.6vw, 34px); }
-.over-actions { display: flex; gap: 16px; margin-top: clamp(6px, 3vh, 30px); flex-wrap: wrap; justify-content: center; }
+/* ---------- Game over: Victory / Defeat, one screen, no scrolling ---------- */
+.over { --lu-h: 32vh; --glow: rgba(41,211,230,.5); --lead: var(--cyan-500); background: #000; justify-content: flex-start; padding: clamp(12px, 5vh, 60px) 0 clamp(10px, 3vh, 30px); }
+.over.imp { --glow: rgba(229,72,77,.55); --lead: var(--red-300); }
+.over h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(52px, 16vh, 180px); line-height: 1; text-transform: uppercase; color: #4DA3FF; text-shadow: 0 0 50px rgba(77,163,255,.55); }
+.over.lost h1 { color: var(--red-500); text-shadow: 0 0 50px rgba(255,61,90,.55); }
+.over-reason { margin-top: clamp(4px, 1.4vh, 16px); font-size: clamp(13px, 2.6vh, 24px); font-weight: 600; color: #fff; padding: 0 16px; max-width: 46em; }
+.over-actions { position: relative; z-index: 30; flex: none; display: flex; gap: 16px; margin-top: clamp(6px, 2vh, 22px); flex-wrap: wrap; justify-content: center; }
 
 /* ---------- Kill cutscene (victim; 2.6s = KILL_ANIM_MS on the server) ---------- */
 .kill-screen { position: fixed; inset: 0; z-index: 45; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(3,5,12,.92); animation: kill-screen 2.6s ease forwards; }
@@ -148,11 +130,8 @@
   .mp-vote { padding: 10px 12px; } .vote-grid { gap: 6px; } .vote-card { height: 54px; }
   .vc-main { gap: 8px; padding: 0 10px; } .vc-actions button { width: 36px; height: 36px; }
   .mp-foot { padding-top: 8px; font-size: 12px; }
-  .reveal-stage { bottom: 50px; } .reveal-pill { padding: 4px 14px 4px 6px; } .reveal-pill i { width: 28px; height: 28px; font-size: 14px; }
-  .elim-killer { max-height: 36vh; } .elim-body { max-height: 20vh; }
   .ghost-banner { width: min(560px, 60vw); padding: 6px 14px; top: 8px; } .ghost-banner h2 { font-size: 18px; } .ghost-banner p { font-size: 12px; }
   .ghost-chat { right: 10px; top: 64px; height: min(240px, 50vh); }
-  .over-lineup .robot { width: 52px !important; height: auto !important; }
   .kill-band { height: 150px; } .kill-band .robot { width: 80px !important; height: auto !important; }
   .kill-killer { left: calc(50% - 120px); } .kill-victim { left: calc(50% + 30px); }
 }

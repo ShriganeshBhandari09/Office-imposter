@@ -9,7 +9,6 @@ import Joystick from './Joystick.jsx';
 import MapScreen from './MapScreen.jsx';
 import Robot from './Robot.jsx';
 import RoleReveal from './screens/RoleReveal.jsx';
-import Eliminated from './screens/Eliminated.jsx';
 import { GhostBanner, GhostPill, GhostChat } from './screens/GhostHud.jsx';
 import Icon from './ui/icons.jsx';
 import { TaskPanels, ActionDock, AlertOverlay, SabotagePicker, PauseMenu, RulesDialog, spotWhere } from './Hud.jsx';
@@ -31,10 +30,6 @@ export default function Game({ view, viewRef, onLeave }) {
   const markersRef = useRef([]);
   const fakeDone = useRef(new Set());
   const [toast, setToast] = useState('');
-  // The cutscene data of my own death, kept after the cutscene ends so the "eliminated" screen can use it.
-  const [kill, setKill] = useState(null);
-  const [ackedKill, setAckedKill] = useState(0);
-  const elimRef = useRef(false);
   const [chatOpen, setChatOpen] = useState(!IS_TOUCH);
 
   const openModal = useCallback((m) => { modalRef.current = m; setModal(m); }, []);
@@ -47,13 +42,6 @@ export default function Game({ view, viewRef, onLeave }) {
       window.__oi = { local: local.current, viewRef, socket, open: (id) => openModal({ kind: 'task', def: taskDef(id) }), openModal };
     }
   }, []);
-
-  useEffect(() => {
-    const k = view.me?.killAnim;
-    if (k && k.at !== kill?.at) setKill({ at: k.at, killerHex: colorHex(k.killerColor), killerHat: k.killerHat, room: k.room });
-  }, [view.me?.killAnim?.at]);
-  const pendingElim = !!kill && kill.at !== ackedKill && !view.me?.alive && !view.me?.killAnim;
-  elimRef.current = pendingElim;
 
   // ---------- Actions ----------
   const doUse = () => {
@@ -154,7 +142,7 @@ export default function Game({ view, viewRef, onLeave }) {
         if (me.tpSeq !== L.lastTp) { L.x = me.x; L.y = me.y; L.lastTp = me.tpSeq; }
 
         // Movement (client-side, validated by the server). Modals like the pause menu don't stop it for others.
-        const canMove = v.phase === 'playing' && !me.inVent && !modalRef.current && !v.roleReveal && !me.killAnim && !elimRef.current;
+        const canMove = v.phase === 'playing' && !me.inVent && !modalRef.current && !v.roleReveal && !me.killAnim;
         let dx = 0, dy = 0;
         if (canMove) {
           const k = keys.current;
@@ -299,8 +287,8 @@ export default function Game({ view, viewRef, onLeave }) {
 
       {/* Bottom-left: where you are */}
       {me?.alive ? <div className="hud-room">{me?.inVent ? 'In a vent' : me?.room}</div> : playing && <GhostPill />}
-      {playing && !me?.alive && !pendingElim && <GhostBanner />}
-      {playing && !me?.alive && !pendingElim && chatOpen && <GhostChat messages={view.ghostChat || []} />}
+      {playing && !me?.alive && !me?.killAnim && <GhostBanner />}
+      {playing && !me?.alive && !me?.killAnim && chatOpen && <GhostChat messages={view.ghostChat || []} />}
 
       {playing && <AlertOverlay view={view} onOpenFix={openFix} />}
       {toast && <div className="toast">{toast}</div>}
@@ -339,8 +327,6 @@ export default function Game({ view, viewRef, onLeave }) {
       {modal?.kind === 'rules' && <RulesDialog settings={view.settings} onClose={() => openModal({ kind: 'pause' })} />}
 
       {view.roleReveal && <RoleReveal view={view} />}
-
-      {pendingElim && <Eliminated view={view} kill={kill} onContinue={() => setAckedKill(kill.at)} />}
 
       {me?.killAnim && (
         <div key={me.killAnim.at} className="kill-screen" aria-live="assertive">

@@ -118,15 +118,6 @@ html, body { overscroll-behavior: none; }
   .chat-log { padding: 8px 12px; gap: 6px; }
 
   /* ---------- Full-screen moments ---------- */
-  .reveal figure .robot { max-width: 24vw; }
-  .reveal-stage { gap: 10px; flex-wrap: wrap; padding: 0 12px; bottom: 90px; }
-  .elim-killer { left: 4%; max-height: 30vh; }
-  .elim-body { right: 4%; max-height: 20vh; }
-  .over { justify-content: flex-start; padding: calc(24px + env(safe-area-inset-top)) 0 calc(16px + env(safe-area-inset-bottom)); overflow-y: auto; }
-  .over-lineup .robot { width: 15vw !important; max-width: 64px; height: auto !important; }
-  .over-stats { display: none; }
-  .over-actions { padding: 0 16px; width: 100%; }
-  .over-actions .ui-btn { flex: 1; }
   .kill-band { height: 130px; }
   .kill-band .robot { width: 64px !important; height: auto !important; }
   .kill-killer { left: calc(50% - 90px); } .kill-victim { left: calc(50% + 20px); }
@@ -171,19 +162,6 @@ html, body { overscroll-behavior: none; }
   .map-tasks li { padding: 3px 0; font-size: 12px; }
 
   /* ---------- Full-screen moments: sized by screen height, not width ---------- */
-  .reveal { padding-top: 8px; }
-  .reveal-kicker { font-size: 10px; letter-spacing: .4em; margin-bottom: 0; }
-  .reveal h1 { font-size: clamp(34px, 18vh, 84px); }
-  .reveal-sub { margin-top: 2px; font-size: 12px; }
-  .reveal-stage { bottom: 46px; gap: 14px; }
-  .reveal figure .robot { max-width: none; width: auto !important; height: 34vh !important; max-height: 150px; }
-  .reveal figure.you .robot { height: 42vh !important; max-height: 180px; }
-  .reveal figcaption { font-size: 11px; }
-  .reveal-platform { height: 70px; bottom: -14px; }
-  .reveal-pill { bottom: 8px; padding: 3px 14px 3px 5px; font-size: 11px; } .reveal-pill i { width: 26px; height: 26px; font-size: 13px; }
-  .elim h1 { font-size: clamp(30px, 14vh, 70px); white-space: nowrap; text-shadow: 0 4px 0 #5A0A18; }
-  .elim { padding-top: 8px; } .elim-sub { font-size: 12px; margin-top: 2px; } .elim-note { font-size: 11px; margin-bottom: 6px; }
-  .elim-btn { margin-bottom: 10px; min-height: 44px; }
   .eject-text h1 { font-size: clamp(22px, 9vh, 48px); } .eject-text h2 { font-size: 14px; } .eject-text p { font-size: 14px; margin-top: 4px; }
   .tally { margin-top: 6px; font-size: 11px; gap: 1px; }
   .kill-text { font-size: 22px; margin-top: 12px; }
@@ -197,8 +175,6 @@ html, body { overscroll-behavior: none; }
   .pause-box { padding: 10px 14px; gap: 6px; }
   .ui-modal:has(.pause-box) { padding: 14px 18px; }
   @media (pointer: coarse) { .pause-box:has(.controls-grid) { display: none; } }
-  .over { overflow-y: auto; }
-  .over-actions { padding-bottom: 10px; }
 }
 @media (orientation: portrait) and (pointer: coarse) { .game .rotate-hint { display: flex; } }
 

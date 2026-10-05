@@ -99,7 +99,7 @@ html, body { overscroll-behavior: none; }
 
   /* ---------- Meeting ---------- */
   .meeting-wrap { padding: 0; }
-  .meeting-panel { border-radius: 0; border-width: 0; height: 100%; }
+  .meeting-panel { border-radius: 0; height: 100%; }
   .mp-head { padding: 8px 12px; gap: 10px; padding-top: calc(8px + env(safe-area-inset-top)); }
   .mp-head p { display: none; }
   .mp-timer { flex-direction: column; align-items: flex-end; gap: 0; padding: 4px 10px; }
@@ -120,13 +120,11 @@ html, body { overscroll-behavior: none; }
   /* ---------- Full-screen moments ---------- */
   .reveal figure .robot { max-width: 24vw; }
   .reveal-stage { gap: 10px; flex-wrap: wrap; padding: 0 12px; bottom: 90px; }
-  .sr-row { gap: 24px; }
   .elim-killer { left: 4%; max-height: 30vh; }
   .elim-body { right: 4%; max-height: 20vh; }
   .over { justify-content: flex-start; padding: calc(24px + env(safe-area-inset-top)) 0 calc(16px + env(safe-area-inset-bottom)); overflow-y: auto; }
   .over-lineup .robot { width: 15vw !important; max-width: 64px; height: auto !important; }
-  .over-stats { flex-wrap: wrap; justify-content: center; padding: 0 12px; gap: 8px; }
-  .over-stats div { min-width: 28vw; padding: 8px 12px; }
+  .over-stats { display: none; }
   .over-actions { padding: 0 16px; width: 100%; }
   .over-actions .ui-btn { flex: 1; }
   .kill-band { height: 130px; }
@@ -183,14 +181,6 @@ html, body { overscroll-behavior: none; }
   .reveal figcaption { font-size: 11px; }
   .reveal-platform { height: 70px; bottom: -14px; }
   .reveal-pill { bottom: 8px; padding: 3px 14px 3px 5px; font-size: 11px; } .reveal-pill i { width: 26px; height: 26px; font-size: 13px; }
-  .splash-report { gap: 6px; }
-  .splash-report h1 { font-size: clamp(30px, 14vh, 72px); white-space: nowrap; }
-  .sr-pill { padding: 4px 18px; font-size: 10px; letter-spacing: .3em; }
-  .sr-row { gap: 28px; } .sr-row .robot { max-height: 22vh; }
-  .sr-horn { width: 52px; height: 52px; } .sr-horn .ui-icon { width: 30px; height: 30px; }
-  .sr-button { width: 64px; height: 64px; box-shadow: 0 0 0 6px #1B1018, 0 0 28px rgba(255,61,90,.7); }
-  .sr-row figure { font-size: 12px; gap: 4px; }
-  .sr-line { font-size: 13px; } .sr-count { padding: 7px 24px; font-size: 13px; }
   .elim h1 { font-size: clamp(30px, 14vh, 70px); white-space: nowrap; text-shadow: 0 4px 0 #5A0A18; }
   .elim { padding-top: 8px; } .elim-sub { font-size: 12px; margin-top: 2px; } .elim-note { font-size: 11px; margin-bottom: 6px; }
   .elim-btn { margin-bottom: 10px; min-height: 44px; }
@@ -207,12 +197,8 @@ html, body { overscroll-behavior: none; }
   .pause-box { padding: 10px 14px; gap: 6px; }
   .ui-modal:has(.pause-box) { padding: 14px 18px; }
   @media (pointer: coarse) { .pause-box:has(.controls-grid) { display: none; } }
-  /* Game over: header, line-up, stats and buttons all have to fit on one short screen. */
-  .over { justify-content: flex-start; gap: 4px; padding-top: 10px; overflow-y: auto; }
-  .over h1 { font-size: 38px; text-shadow: 0 4px 0 #0F5B70; } .over.imp h1 { text-shadow: 0 4px 0 #5A0A18; }
-  .over-lineup { margin-top: 0; gap: 10px; } .over-lineup li { gap: 3px; }
-  .over-stats { margin-top: 2px; gap: 8px; } .over-stats div { padding: 6px 12px; min-width: 120px; } .over-stats b { font-size: 20px; }
-  .over-actions { margin-top: 6px; padding-bottom: 10px; gap: 12px; } .over-actions .ui-btn { min-height: 44px; }
+  .over { overflow-y: auto; }
+  .over-actions { padding-bottom: 10px; }
 }
 @media (orientation: portrait) and (pointer: coarse) { .game .rotate-hint { display: flex; } }
 

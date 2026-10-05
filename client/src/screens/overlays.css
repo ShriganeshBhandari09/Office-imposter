@@ -1,6 +1,6 @@
 /* Full-screen moments: role reveal, meeting, ejection, eliminated, ghost mode, game over, kill cutscene. */
-.reveal, .splash-report, .meeting-wrap, .eject, .elim, .over { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; text-align: center; overflow: hidden; }
-.reveal { z-index: 25; } .splash-report { z-index: 30; } .meeting-wrap { z-index: 30; } .eject { z-index: 32; } .elim { z-index: 28; } .over { z-index: 34; }
+.reveal, .meeting-wrap, .eject, .elim, .over { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; text-align: center; overflow: hidden; }
+.reveal { z-index: 25; } .meeting-wrap { z-index: 30; } .eject { z-index: 32; } .elim { z-index: 28; } .over { z-index: 34; }
 .chat-form { position: relative; }
 .chat-form .ui-input { height: 48px; font-size: 16px; padding-right: 58px; }
 .chat-form .send { position: absolute; right: 6px; top: 6px; width: 36px; height: 36px; border: 0; border-radius: 9px; background: var(--cyan-500); color: var(--cyan-ink); display: grid; place-items: center; padding: 0; }
@@ -24,24 +24,9 @@
 .reveal-pill { position: absolute; bottom: clamp(10px, 3vh, 30px); display: flex; align-items: center; gap: 14px; padding: 8px 22px 8px 10px; border-radius: 14px; border: 1.5px solid var(--line-200); background: var(--surface-200); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: clamp(12px, 1.3vw, 17px); }
 .reveal-pill i { width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--cyan-500); display: grid; place-items: center; font-style: normal; font-family: var(--font-display); font-size: 20px; color: var(--cyan-500); }
 
-/* ---------- Report splash ---------- */
-.splash-report { justify-content: center; gap: clamp(8px, 2vh, 22px); background:
-  radial-gradient(ellipse at center, rgba(120,15,35,.55), rgba(10,2,6,.95) 75%),
-  repeating-linear-gradient(135deg, #2A0610 0 70px, #3B0C18 70px 140px); }
-.sr-pill { padding: 8px 26px; border-radius: 999px; border: 1.5px solid var(--red-300); color: #FFC2CC; font-weight: 700; letter-spacing: .4em; text-transform: uppercase; font-size: clamp(11px, 1.3vw, 16px); }
-.splash-report h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(44px, 10vw, 150px); line-height: 1; text-transform: uppercase; color: #fff; text-shadow: 0 7px 0 #8A0F24, 0 0 50px rgba(255,61,90,.5); }
-.sr-row { display: flex; align-items: flex-end; justify-content: center; gap: clamp(30px, 10vw, 180px); }
-.sr-row figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; font-weight: 700; font-size: clamp(14px, 1.8vw, 24px); }
-.sr-row figure.dead figcaption { color: #FFB3C0; }
-.sr-row .robot { max-height: 26vh; width: auto !important; }
-.sr-horn { align-self: center; width: clamp(70px, 9vw, 120px); height: clamp(70px, 9vw, 120px); border-radius: 50%; background: var(--red-500); color: #fff; display: grid; place-items: center; box-shadow: 0 0 40px rgba(255,61,90,.7); }
-.sr-button { width: 110px; height: 110px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #FF7088, #FF3D5A 60%, #8A0F24); box-shadow: 0 0 0 10px #1B1018, 0 0 40px rgba(255,61,90,.7); }
-.sr-line { color: #FFD3DA; font-size: clamp(14px, 2vw, 26px); padding: 0 16px; }
-.sr-count { padding: 14px 40px; border-radius: 14px; background: #fff; color: #8A0F24; font-family: var(--font-display); text-transform: uppercase; font-size: clamp(14px, 1.9vw, 24px); box-shadow: 0 5px 0 #B9A8AD; }
-
 /* ---------- Meeting ---------- */
 .meeting-wrap { justify-content: center; background: rgba(3,5,12,.9); padding: 12px; }
-.meeting-panel { width: min(1500px, 100%); height: min(860px, 100%); display: flex; flex-direction: column; border: 3px solid var(--yellow-500); border-radius: 28px; background: var(--surface-200); box-shadow: 0 12px 0 #5C4A0F, 0 30px 80px rgba(0,0,0,.6); text-align: left; overflow: hidden; }
+.meeting-panel { width: min(1500px, 100%); height: min(860px, 100%); display: flex; flex-direction: column; border-radius: 28px; background: var(--surface-200); box-shadow: 0 30px 80px rgba(0,0,0,.6); text-align: left; overflow: hidden; }
 .mp-head { display: flex; align-items: center; gap: 18px; padding: 18px 26px; border-bottom: 1px solid var(--line-100); flex: none; }
 .mp-icon { width: 60px; height: 60px; flex: none; border-radius: 16px; background: var(--red-500); color: #fff; display: grid; place-items: center; }
 .mp-head > div:nth-child(2) { flex: 1; min-width: 0; }
@@ -156,7 +141,7 @@
 
 /* ---------- Phones (short landscape screens) ---------- */
 @media (max-width: 900px), (max-height: 520px) {
-  .meeting-wrap { padding: 0; } .meeting-panel { border-radius: 0; border-width: 2px; height: 100%; }
+  .meeting-wrap { padding: 0; } .meeting-panel { border-radius: 0; height: 100%; }
   .mp-head { padding: 8px 14px; gap: 10px; } .mp-icon { width: 38px; height: 38px; border-radius: 10px; } .mp-icon .ui-icon { width: 20px; height: 20px; }
   .mp-timer { padding: 4px 12px; gap: 8px; }
   .mp-body { grid-template-columns: 1fr 240px; }

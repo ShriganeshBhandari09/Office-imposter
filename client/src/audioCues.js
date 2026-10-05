@@ -19,7 +19,7 @@ export function useAudioCues(view) {
     const stage = view?.meeting?.stage;
     if (view) {
       if (view.roleReveal && !p.reveal) sfx('reveal');
-      if (stage === 'intro' && p.stage !== 'intro') sfx(view.meeting.reason === 'body' ? 'report' : 'meeting');
+      if (phase === 'meeting' && p.phase !== 'meeting') sfx(view.meeting.reason === 'body' ? 'report' : 'meeting');
       if (stage === 'voting' && p.stage === 'discussion') sfx('meeting');
       if (phase === 'ejection' && p.phase !== 'ejection') sfx('eject');
       if (view.sabotage && !p.sabotage) sfx('alarm');

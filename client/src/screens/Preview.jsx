@@ -26,15 +26,13 @@ function mock(scene) {
     ghostChat: [{ id: '1', name: 'Meera', color: 'purple', text: 'It was Rohan!! he vented in Pixel' }, { id: '2', name: 'Dev', color: 'cyan', text: 'Same guy got me in the Lobby' }],
   };
   const meeting = (stage, extra = {}) => ({
-    callerId: 'k', reason: 'body', bodyName: 'Meera', bodyColor: 'purple', bodyRoom: 'Pixel', bodyVent: 'V3', stage, secondsLeft: stage === 'intro' ? 3 : 42,
+    callerId: 'k', reason: 'body', bodyName: 'Meera', bodyColor: 'purple', bodyRoom: 'Pixel', bodyVent: 'V3', stage, secondsLeft: 42,
     voted: ['a', 's', 't'], myVote: null,
     chat: [{ id: 'c1', name: 'Kabir', color: 'green', text: 'Body in Pixel, right next to the V3 vent.' }, { id: 'c2', name: 'Priya', color: 'pink', text: 'Aarav was in Conference the whole time?' },
       { id: 'c3', name: 'Aarav', color: 'red', text: 'Doing Align the projector. Dev saw me.' }, { id: 'c4', name: 'Sneha', color: 'yellow', text: 'Rohan skipped his task in Call 2 twice.' }], ...extra,
   });
   switch (scene) {
     case 'reveal-crew': case 'reveal-imp': return base;
-    case 'report': return { ...base, phase: 'meeting', meeting: meeting('intro') };
-    case 'emergency': return { ...base, phase: 'meeting', meeting: meeting('intro', { reason: 'button', bodyName: null }) };
     case 'discussion': return { ...base, phase: 'meeting', meeting: meeting('discussion') };
     case 'voting': return { ...base, phase: 'meeting', meeting: meeting('voting') };
     case 'ejection': return { ...base, phase: 'ejection', ejection: { text: 'Rohan was ejected.', sub: 'Rohan was an Impostor.', color: 'orange', hat: 'none', wasImpostor: true, impostorsLeft: 1, tally: { r: ['a', 's', 't'], skip: ['p'] } } };
@@ -49,7 +47,7 @@ function mock(scene) {
   }
 }
 
-const SCENES = ['loading', 'loading-sync', 'server', 'reveal-crew', 'reveal-imp', 'report', 'emergency', 'discussion', 'voting', 'ejection', 'ejection-plain', 'eliminated', 'ghost', 'over-crew', 'over-imp'];
+const SCENES = ['loading', 'loading-sync', 'server', 'reveal-crew', 'reveal-imp', 'discussion', 'voting', 'ejection', 'ejection-plain', 'eliminated', 'ghost', 'over-crew', 'over-imp'];
 
 export default function Preview() {
   const [scene, setScene] = useState(SCENES.includes(location.hash.slice(1)) ? location.hash.slice(1) : null);
@@ -67,7 +65,7 @@ export default function Preview() {
           {scene === 'loading-sync' && <Connecting code="ABCD" joined synced mapReady={false} hostName="Aarav" onCancel={() => pick(null)} onSkip={() => pick(null)} />}
           {scene === 'server' && <ServerSplash slow />}
           {scene.startsWith('reveal') && <RoleReveal view={view} />}
-          {['report', 'emergency', 'discussion', 'voting'].includes(scene) && <Meeting view={view} />}
+          {['discussion', 'voting'].includes(scene) && <Meeting view={view} />}
           {scene.startsWith('ejection') && <Ejection view={view} />}
           {scene === 'eliminated' && <Eliminated view={view} kill={{ killerHex: '#F76B15', killerHat: 'none', room: 'Lobby' }} onContinue={() => pick(null)} />}
           {scene === 'ghost' && (<div className="game" style={{ background: '#0A1022' }}><GhostBanner /><GhostPill /><GhostChat messages={view.ghostChat} /></div>)}

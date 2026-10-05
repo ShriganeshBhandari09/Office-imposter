@@ -150,21 +150,16 @@
   .reveal-sub { font-size: 11px; }
   .reveal figure .robot { height: 28vh !important; max-height: 120px; } .reveal figure.you .robot { height: 36vh !important; max-height: 150px; }
   .reveal figcaption { font-size: 10px; }
-  .splash-report h1 { font-size: clamp(26px, 11vh, 56px); text-shadow: 0 4px 0 #8A0F24; }
-  .sr-pill { font-size: 9px; padding: 3px 14px; }
-  .sr-horn { width: 42px; height: 42px; } .sr-horn .ui-icon { width: 24px; height: 24px; }
-  .sr-button { width: 50px; height: 50px; } .sr-row .robot { max-height: 20vh; } .sr-row figure { font-size: 11px; }
-  .sr-line { font-size: 12px; } .sr-count { font-size: 11px; padding: 6px 18px; border-radius: 10px; }
   .elim h1 { font-size: clamp(26px, 11vh, 52px); } .elim-sub { font-size: 11px; } .elim-note { font-size: 10px; }
   .eject-text h1 { font-size: clamp(22px, 10vh, 44px); } .eject-text h2 { font-size: 13px; } .eject-text p { font-size: 13px; } .tally { font-size: 11px; }
-  .over { gap: 6px; padding-top: 14px; }
-  .over h1 { font-size: clamp(36px, 14vh, 60px); text-shadow: 0 4px 0 #0F5B70; } .over.imp h1 { text-shadow: 0 4px 0 #5A0A18; }
-  .over-kicker { font-size: 11px; } .over-reason { font-size: 14px; }
-  .over-lineup { gap: 14px; margin-top: 4px; } .over-lineup li { gap: 4px; }
-  .over-lineup .robot { width: clamp(46px, 13vh, 62px) !important; height: auto !important; }
-  .over-lineup b { font-size: 13px; } .over-lineup .role { font-size: 9px; padding: 2px 8px; }
-  .over-stats { gap: 12px; margin-top: 8px; }
-  .over-stats div { padding: 8px 16px; min-width: 130px; border-width: 1.5px; border-radius: 12px; } .over-stats small { font-size: 10px; } .over-stats b { font-size: 22px; }
-  .over-actions { gap: 12px; margin-top: 10px; } .over-actions .ui-btn { min-height: 42px; font-size: 16px; padding: 0 24px; }
+  /* Game over fills the phone screen; the match stats are left out to make room. */
+  .over { justify-content: center; gap: clamp(6px, 2.4vh, 14px); padding-top: 10px; }
+  .over h1 { font-size: clamp(44px, 19vh, 92px); text-shadow: 0 5px 0 #0F5B70; } .over.imp h1 { text-shadow: 0 5px 0 #5A0A18; }
+  .over-kicker { font-size: 13px; } .over-reason { font-size: 17px; }
+  .over-lineup { gap: clamp(14px, 3vw, 28px); margin-top: 6px; } .over-lineup li { gap: 5px; }
+  .over-lineup .robot { width: clamp(60px, 21vh, 104px) !important; height: auto !important; }
+  .over-lineup b { font-size: 16px; } .over-lineup .role { font-size: 11px; padding: 3px 10px; }
+  .over-stats { display: none; }
+  .over-actions { gap: 14px; margin-top: 12px; } .over-actions .ui-btn { min-height: 52px; font-size: 19px; padding: 0 30px; }
   .kill-text { font-size: 18px; }
 }

@@ -5,30 +5,6 @@ import { Button, Chip } from '../ui/kit.jsx';
 import { socket } from '../net.js';
 import { colorHex } from '../robot.js';
 
-// The splash that opens every meeting: who reported what, then "Meeting starts in 3".
-function Splash({ view }) {
-  const m = view.meeting;
-  const caller = view.roster.find((r) => r.id === m.callerId);
-  const body = m.reason === 'body';
-  const victim = body ? view.roster.find((r) => r.name === m.bodyName) : null;
-  const where = [m.bodyRoom, m.bodyVent ? `next to vent ${m.bodyVent}` : null].filter(Boolean).join(', ');
-  return (
-    <div className="splash-report" role="alert">
-      <span className="sr-pill">{body ? 'Dead body found' : 'Emergency'}</span>
-      <h1>{body ? 'Body reported' : 'Emergency meeting'}</h1>
-      <div className="sr-row">
-        <figure>{caller && <Robot color={caller.color} hat={caller.hat} size={150} />}<figcaption>{caller?.name}</figcaption></figure>
-        <span className="sr-horn"><Icon name={body ? 'report' : 'sabotage'} size={56} /></span>
-        {body
-          ? <figure className="dead">{<Robot color={m.bodyColor} hat={victim?.hat} state="body" size={150} />}<figcaption>{m.bodyName}</figcaption></figure>
-          : <figure className="dead"><span className="sr-button" /><figcaption>Emergency button</figcaption></figure>}
-      </div>
-      <p className="sr-line">{body ? `${caller?.name} found ${m.bodyName}${where ? ` in ${where}` : ''}` : `${caller?.name} pressed the emergency button`}</p>
-      <div className="sr-count">Meeting starts in {Math.max(1, m.secondsLeft)}</div>
-    </div>
-  );
-}
-
 // One player in the vote grid (foundation: components/VoteCard).
 function VoteCard({ r, you, caller, voted, selected, mine, disabled, onSelect, onConfirm, onCancel }) {
   const dead = !r.alive;
@@ -64,8 +40,6 @@ export function Meeting({ view }) {
   const canVote = me.alive && !m.myVote && voting;
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ block: 'end' }); }, [m.chat.length]);
-
-  if (m.stage === 'intro') return <Splash view={view} />;
 
   const send = (e) => {
     e.preventDefault();

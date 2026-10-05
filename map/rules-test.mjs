@@ -60,10 +60,8 @@ function room(bots = 5) {
   g.emergencyReadyAt = 0;
   crew.x = EMERGENCY_BUTTON.x + 40; crew.y = EMERGENCY_BUTTON.y; crew.emergencyLeft = 1;
   ok(g.emergency(crew.id).ok, 'emergency button works next to the table');
-  ok(g.viewFor(crew.id).meeting.stage === 'intro', 'a meeting opens with the 3 second report splash');
-  g.meeting.introEndsAt = Date.now() - 1;
   const m = g.viewFor(crew.id).meeting;
-  ok(m.stage === 'discussion', 'then the discussion stage');
+  ok(m.stage === 'discussion', 'a meeting opens straight into the discussion stage');
   g.vote(crew.id, 'skip'); ok(!g.meeting.votes[crew.id], 'votes are refused during discussion');
   g.meeting.discussEndsAt = Date.now() - 1;
   ok(g.viewFor(crew.id).meeting.stage === 'voting', 'the stage flips to voting');

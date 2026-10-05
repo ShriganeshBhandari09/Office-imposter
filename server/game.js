@@ -22,7 +22,6 @@ const KILL_ANIM_MS = 2600; // matches the .kill-screen animation in styles.css
 const AFK_MS = 60 * 1000; // a lobby player who hasn't moved, chatted or clicked for this long shows as AFK
 const BUBBLE_MS = 5000; // how long a lobby chat bubble stays above a player
 const WIFI_HOLD_MS = 3000; // both Wi-Fi panels must be held this long
-const MEETING_INTRO_MS = 3000; // the "Body reported" splash before a meeting's discussion starts
 
 // One game room. The server is the single source of truth for roles, kills,
 // tasks, sabotages, votes and win conditions. Clients only send intentions.
@@ -472,9 +471,8 @@ export class Game {
       bodyColor: body?.color || null,
       bodyRoom: body ? roomAt(body.x, body.y) : null,
       bodyVent: body ? this.nearestVent(body) : null,
-      introEndsAt: t + MEETING_INTRO_MS,
-      discussEndsAt: t + MEETING_INTRO_MS + discussionSeconds * 1000,
-      endsAt: t + MEETING_INTRO_MS + (discussionSeconds + votingSeconds) * 1000,
+      discussEndsAt: t + discussionSeconds * 1000,
+      endsAt: t + (discussionSeconds + votingSeconds) * 1000,
       votes: {},
       chat: [],
     };
@@ -694,8 +692,8 @@ export class Game {
         bodyColor: this.meeting.bodyColor,
         bodyRoom: this.meeting.bodyRoom,
         bodyVent: this.meeting.bodyVent,
-        stage: this.votingOpen() ? 'voting' : t < this.meeting.introEndsAt ? 'intro' : 'discussion',
-        secondsLeft: secsLeft(this.votingOpen() ? this.meeting.endsAt : t < this.meeting.introEndsAt ? this.meeting.introEndsAt : this.meeting.discussEndsAt),
+        stage: this.votingOpen() ? 'voting' : 'discussion',
+        secondsLeft: secsLeft(this.votingOpen() ? this.meeting.endsAt : this.meeting.discussEndsAt),
         voted: Object.keys(this.meeting.votes),
         myVote: this.meeting.votes[pid] || null,
         chat: this.meeting.chat,
